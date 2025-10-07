@@ -237,14 +237,17 @@ function drawCourses()
         border-bottom: 4px solid var(--page_secondary_color);
         font-weight: bold;
     }
+    
+    .modules-container {
+        width: 80%;
+        overflow-x: scroll;
+        overflow-y: hidden;
+        margin: 30px auto;
+    }
 
     .modules {
         display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
         gap: 20px;
-        margin: 30px auto;
-        width: 80%;
     }
 
     .module {
@@ -252,7 +255,6 @@ function drawCourses()
         width: 290px;
         height: 270px;
         border-radius: 10px;
-        overflow: hidden;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         cursor: pointer;
     }
@@ -262,8 +264,8 @@ function drawCourses()
     }
 
     .module img {
-        width: 100%;
-        height: 100%;
+        width: 290px;
+        height: 270px;
         object-fit: cover;
     }
 
@@ -271,9 +273,10 @@ function drawCourses()
         position: absolute;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
+        width: 260px;
+        height: 240px;
         background: rgba(44, 57, 121, 0.7);
+        border-radius: 10px;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
@@ -284,7 +287,6 @@ function drawCourses()
     .module-title {
         font-size: 3rem;
         font-weight: bold;
-        margin-bottom: 10px;
     }
 
     .module-progress {
@@ -426,8 +428,10 @@ function drawCourses()
         <%=drawProgress()%>
         <%=drawTabs()%>
 
-        <div class="modules">
-            <%=drawModules()%>
+        <div class="modules-container">
+            <div class="modules">
+                <%=drawModules()%>
+            </div>
         </div>
 
         <!-- <div class="modules">
