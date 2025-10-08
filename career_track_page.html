@@ -7,7 +7,7 @@ activeTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs
 tracks = XQuery("sql: SELECT * FROM career_tracks.tracks");
 
 competenceCourses = XQuery("sql: SELECT DISTINCT c.name, t.course_id FROM dbo.competences AS c JOIN career_tracks.courses_from_tracks AS t ON c.id = t.competence_id WHERE c.code = 'kt' AND t.track_id = '" + activeTrack.track_id + "' ");
-uniqueCompetencesNames = XQuery("sql: SELECT DISTINCT c.name FROM dbo.competences AS c JOIN career_tracks.courses_from_tracks AS t ON c.id = t.competence_id WHERE c.code = 'kt' AND t.track_id = '" + activeTrack.track_id + "' ");
+uniqueCompetencesNames = XQuery("sql: SELECT DISTINCT c.name, MIN(c.id) AS competence_id FROM dbo.competences AS c JOIN career_tracks.courses_from_tracks AS t ON c.id = t.competence_id WHERE c.code = 'kt' AND t.track_id = '" + activeTrack.track_id + "' GROUP BY c.name");
 %>console.log(<%=ArrayCount(uniqueCompetencesNames)%>);<%
 
 allCompetences = XQuery("sql: SELECT * FROM dbo.competences WHERE code = 'kt'");
@@ -15,14 +15,12 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
 collabCompetences = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = '" + activeTrack.id + "'");
 %>console.log(<%=ArrayCount(thisCompetencesCourses)%>);<%
 
-descriptions = ["Вы быстро освоите все тонкости профессии: от юридических аспектов сделок с недвижимостью до эффективных техник продаж и маркетинга. Вы узнаете, как строить базу клиентов, вести переговоры и успешно закрывать сделки.", "Вы хотите быть успешным риелтором и при этом уделять достаточно времени семье? Этот карьерный трек покажет, как эффективно управлять своим временем и ресурсами gfdgdfgdfgdfgdfgfdgdgdgdgdgdgdfgdfgdfgdg.", "Вы уже добились успеха в сфере недвижимости, но чувствуете, что пора двигаться дальше? Этот трек создан для тех, кто готов выйти на новый уровень и освоить передовые стратегии рынка.", "Готовы переосмыслить свой потенциал и достичь новых вершин? Этот трек — ваш ключ к будущему в недвижимости. Обучайтесь сегодня, чтобы не просто работать на рынке, а определять его правила!"];
-
 function drawHead()
 {
     head = "";
 
     for(track in tracks){
-        if(track.id == activeTrack.track_id){trackName = track.name; trackDesc = descriptions[track.id-1];}
+        if(track.id == activeTrack.track_id){trackName = track.name; trackDesc = track.description;}
     }
 
     head += '<div class="head">
@@ -98,7 +96,8 @@ function drawModules()
     i = 0;
 
     for(c in uniqueCompetencesNames){
-        modules += '<div class="module">
+        competence_id = "'" + c.competence_id + "'";
+        modules += '<div class="module" onclick="document.querySelector(`[data-id='+ competence_id +']`).scrollIntoView({behavior: `smooth`, block: `start`})">
             <img src="http://education.etagi.com/download_file.html?file_id=7546507309267187449">
             <div class="module-content">
                 <div class="module-title">' + c.name + '</div>
@@ -118,7 +117,7 @@ function drawCourses()
     i = 0;
 
     for(competence in uniqueCompetencesNames){
-        coursesBlock += '<div class="section" id="section_' + i + '">
+        coursesBlock += '<div class="section" data-id='+ competence.competence_id +'>
                             <div class="section-bar">
                                 <div class="section-title">'+ competence.name +'</div>
                             </div>
@@ -237,17 +236,30 @@ function drawCourses()
         border-bottom: 4px solid var(--page_secondary_color);
         font-weight: bold;
     }
-    
+
     .modules-container {
-        width: 80%;
-        overflow-x: scroll;
-        overflow-y: hidden;
-        margin: 30px auto;
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        margin: 30px 0 30px 0;
+        justify-content: center;
+    }
+
+    .modules-container button {
+        margin: 0;
+        padding: 0;
+        border: none;
+        height: 80px;
+        width: 50px;
     }
 
     .modules {
+        width: 80%;
         display: flex;
         gap: 20px;
+        overflow-x: scroll;
+        overflow-y: hidden;
+        scrollbar-width: none;
     }
 
     .module {
@@ -429,9 +441,11 @@ function drawCourses()
         <%=drawTabs()%>
 
         <div class="modules-container">
-            <div class="modules">
+            <button id="scroll-prev"><img src="http://education-test.etagi.com/download_file.html?file_id=7558751212548830488"></button>
+            <div class="modules" id="scroll-container">
                 <%=drawModules()%>
             </div>
+            <button id="scroll-next"><img src="http://education-test.etagi.com/download_file.html?file_id=7558756114306075470"></button>
         </div>
 
         <!-- <div class="modules">
@@ -479,15 +493,20 @@ function drawCourses()
         });
     });
 
-    let i = 0;
+    const container = document.getElementById('scroll-container');
 
-    document.querySelectorAll('.module').forEach(m => {
-        console.log(i);
-        document.querySelectorAll('.section').forEach(s => {
-            if(s.id == `section_${i}`) {
-                m.addEventListener('click', () => { s.scrollIntoView(); });
-            }
+    document.getElementById('scroll-next').addEventListener('click', () => {
+        container.scrollBy({
+            left: 600,
+            behavior: "smooth",
         });
-        i++;
     });
+
+    document.getElementById('scroll-prev').addEventListener('click', () => {
+        container.scrollBy({
+            left: -600,
+            behavior: "smooth",
+        });
+    });
+
 </script>
