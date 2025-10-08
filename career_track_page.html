@@ -1,6 +1,5 @@
 <script>
 <%
-
 %>console.log(<%=curUserID%>);<%
 
 activeTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND main_or_not = 'true'"));
