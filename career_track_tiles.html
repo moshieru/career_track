@@ -173,7 +173,7 @@
         if (collabTracksCount == 0 || startTrack.percent < 100){
             for(track in tracks){
                 if(track.id != 1 && track.id != 5 && track.id != 6 && track.id != 7){
-                    sidebarCards += ' 
+                    sidebarCards += '
                     <div class="sidebar-card">
                         <img src="http://education-test.etagi.com/download_file.html?file_id=' + track.image + '">
                         <div class="sidebar-content">
@@ -186,6 +186,7 @@
                                 <img src="https://i.ibb.co/9HTD4qpB/image.png">'
                                 + courseCount(track.id) + '
                                 </div>
+                                <img id="info" src="https://i.ibb.co/53V2wBt/info.png">
                             </div>
                             <h3 class="sidebar-title">«' + track.name + '»</h3>
                             <p class="sidebar-text">' + descriptions[track.id-1] + '</p>
@@ -424,6 +425,10 @@
         height: 16px;
     }
 
+    #info {
+        margin-left: auto;
+    }
+
     .sidebar-titlebody {
         display: flex;
         flex-direction: row;
@@ -650,7 +655,7 @@
         }
 
         .progress-bar {
-        height: 30px;
+        height: 20px;
         }
 
         .percent {
@@ -697,7 +702,7 @@
         }
 
         .sidebar-header {
-            font-size: 10px;
+            font-size: 8px;
             margin-bottom: 14px;
         }
 
