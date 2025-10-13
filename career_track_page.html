@@ -3,6 +3,7 @@
 %>console.log(<%=curUserID%>);<%
 
 activeTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND main_or_not = 'true'"));
+user_competence_results = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = "+ activeTrack.id +"");
 
 tracks = XQuery("sql: SELECT * FROM career_tracks.tracks");
 
@@ -39,7 +40,7 @@ function drawProgress()
             <div class="progress" style="width: ' + activeTrack.percent + '%;"></div>
             <div class="percent">' + activeTrack.percent + '%</div>
         </div>';
-    
+
     return progress;
 }
 
@@ -49,9 +50,9 @@ function drawTabs()
 
     if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_id == 6 || activeTrack.track_id == 7){
         tabs += '<div class="tabs">
-            <div class="tab active">0-3 месяца</div>
-            <div class="tab">4-6 месяцев</div>
-            <div class="tab">Итоговый тест</div>
+            <div class="tab active" data-id="section1">0-3 месяца</div>
+            <div class="tab" data-id="section2">4-6 месяцев</div>
+            <div class="tab" data-id="section3">Итоговый тест</div>
         </div>'
     }
 
@@ -61,48 +62,24 @@ function drawTabs()
 function drawModules()
 {
     modules = "";
-    // tempCompetence = null;
-    // competenceName = "";
-    // competencePercent = "";
-
-    // for(competence in thisCompetences){
-    //     if(competence != tempCompetence){
-    //         for(allCompetence in allCompetences){
-    //             if(allCompetence.id == competence.competence_id){
-    //                 competenceName = allCompetence.name;
-    //                 break;
-    //             }
-    //         }
-    //         for(collabCompetence in collabCompetences){
-    //             if(collabCompetence.competence_id == competence.competence_id){
-    //                 competencePercent = collabCompetence.percent;
-    //                 break;
-    //             }
-    //         }
-    //         modules += '<div class="module">
-    //             <img src="http://education.etagi.com/download_file.html?file_id=7546507309267187449">
-    //             <div class="module-content">
-    //                 <div class="module-title">' + competenceName + '</div>
-    //             </div>
-    //             <div class="module-progress">' + competencePercent + '</div>
-    //         </div>';
-    //     }
-
-    //     tempCompetence = competence;
-    // }
-
-    // return modules;
 
     i = 0;
 
     for(c in uniqueCompetencesNames){
         competence_id = "'" + c.competence_id + "'";
+        competence_result = 0;
+        for(comp_res in user_competence_results){
+            if(comp_res.competence_id == c.competence_id){
+                competence_result = comp_res.percent;
+                break;
+            }
+        }
         modules += '<div class="module" onclick="document.querySelector(`[data-id='+ competence_id +']`).scrollIntoView({behavior: `smooth`, block: `start`})">
             <img src="http://education.etagi.com/download_file.html?file_id=7546507309267187449">
             <div class="module-content">
                 <div class="module-title">' + c.name + '</div>
             </div>
-            <div class="module-progress">' + 0 + '</div>
+            <div class="module-progress">' + competence_result + '%</div>
         </div>';
 
         i++;
@@ -117,13 +94,20 @@ function drawCourses()
     i = 0;
 
     for(competence in uniqueCompetencesNames){
+        competence_result = 0;
+        for(comp_res in user_competence_results){
+            if(comp_res.competence_id == competence.competence_id){
+                competence_result = comp_res.percent;
+                break;
+            }
+        }
         coursesBlock += '<div class="section" data-id='+ competence.competence_id +'>
                             <div class="section-bar">
                                 <div class="section-title">'+ competence.name +'</div>
                             </div>
                             <div class="section-progressbar">
-                                <div class="section-progress"></div>
-                                <div class="section-percent">0%</div>
+                                <div class="section-progress" style="width: ' + competence_result + '%;"></div>
+                                <div class="section-percent">'+ competence_result +'%</div>
                             </div>
                         <div class="course-cards">';
         for(courses in competenceCourses){
@@ -378,8 +362,7 @@ function drawCourses()
 
     .section-percent {
         text-align: center;
-        left: 50%;
-        position: absolute;
+        position: relative;
         color: var(--text_secondary_color);
         z-index: 2;
     }
@@ -471,7 +454,7 @@ function drawCourses()
             </div>
         </div> -->
 
-        <div class="sections">
+        <div class="sections section1">
             <!-- <div class="section">
                 <div class="section-bar">
                     <div class="section-title">Адаптация</div>
@@ -495,6 +478,29 @@ function drawCourses()
             </div> -->
             <%=drawCourses()%>
         </div>
+        <div class="sections section2" style="display: none">
+            <div class="section">
+                <div class="section-bar">
+                    <div class="section-title">Адаптация</div>
+                </div>
+
+                <div class="section-progressbar">
+                    <div class="section-progress"></div>
+                    <div class="section-percent">0%</div>
+                </div>
+
+                <div class="course-cards">
+                    <div class="course-card">
+                        <img src="http://education.etagi.com/download_file.html?file_id=7370968239122859285">
+                        <h3>Программа адаптации СПН. Быстрый старт в недвижимости</h3>
+                        <div class="course-card-progressbar">
+                            <div class="course-card-progress"></div>
+                            <div class="course-card-percent">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -503,6 +509,8 @@ function drawCourses()
         tab.addEventListener('click', () => {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
+            document.querySelectorAll('.sections').forEach(t => t.style.display = 'none');
+            document.querySelector('.' + tab.getAttribute("data-id")).style.display = "flex";
         });
     });
 
