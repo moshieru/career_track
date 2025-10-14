@@ -129,7 +129,42 @@ function drawCourses()
     }
     return coursesBlock;
 }
+
+function createTab(level){
+    tab += '<div class=""+level+"">';
+    tab += drawModules(level);
+    tab += drawCourses(level);
+    tab += '</div>';
+    return tab;
+}
+
+// основной код (проверка на тип трека: старт или обычный)
+
+if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_id == 6 || activeTrack.track_id == 7){
+    tab1 = '';
+    tab2 = '';
+    tab3 = '';
+
+    // tab1 += '<div class="level1">';
+    // tab1 += drawModules();
+    // tab1 += drawCourses();
+    // tab1+= '</div>';
+    tab1 += createTab(level1);
+    tab2 += createTab(level2);
+    tab3 += createTab(level3);
+
+
+} else{
+    tab1 = '';
+
+    tab1 += createTab(level);
+}
+
+
+
 %>
+
+let coursesBlockJS = `<%=drawCourses()%>`;
 </script>
 <style>
 
@@ -615,38 +650,7 @@ function drawCourses()
             <button id="scroll-next"><img class="button-img" src="http://education-test.etagi.com/download_file.html?file_id=7558756114306075470"></button>
         </div>
 
-        <!-- <div class="modules">
-            <div class="module">
-                <img src="http://education.etagi.com/download_file.html?file_id=7546507309267187449">
-                <div class="module-content">
-                    <div class="module-title">Адаптация</div>
-                </div>
-                <div class="module-progress">0%</div>
-            </div>
-        </div> -->
-
         <div class="sections section1">
-            <!-- <div class="section">
-                <div class="section-bar">
-                    <div class="section-title">Адаптация</div>
-                </div>
-
-                <div class="section-progressbar">
-                    <div class="section-progress"></div>
-                    <div class="section-percent">0%</div>
-                </div>
-
-                <div class="course-cards">
-                    <div class="course-card">
-                        <img src="http://education.etagi.com/download_file.html?file_id=7370968239122859285">
-                        <h3>Программа адаптации СПН. Быстрый старт в недвижимости</h3>
-                        <div class="course-card-progressbar">
-                            <div class="course-card-progress"></div>
-                            <div class="course-card-percent">0%</div>
-                        </div>
-                    </div>
-                </div>
-            </div> -->
             <%=drawCourses()%>
         </div>
         <div class="sections section2" style="display: none">
