@@ -750,7 +750,10 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
 
             <div class="modules-container">
                 <button id="scroll-prev"><img class="button-img" src="http://education-test.etagi.com/download_file.html?file_id=7558751212548830488"></button>
-                <div class="modules" id="scroll-container">
+                <div class="modules module1 scroll-container">
+                    <%=drawModules('level')%>
+                </div>
+                <div class="modules module2 scroll-container" style="display: none">
                     <%=drawModules('level')%>
                 </div>
                 <button id="scroll-next"><img class="button-img" src="http://education-test.etagi.com/download_file.html?file_id=7558756114306075470"></button>
@@ -787,20 +790,20 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
         });
     });
 
-    const container = document.getElementById('scroll-container');
+    const container = document.querySelectorAll('.scroll-container');
 
     document.getElementById('scroll-next').addEventListener('click', () => {
-        container.scrollBy({
+        container.forEach(t => t.scrollBy({
             left: 600,
             behavior: "smooth",
-        });
+        }));
     });
 
     document.getElementById('scroll-prev').addEventListener('click', () => {
-        container.scrollBy({
+        container.forEach(t => t.scrollBy({
             left: -600,
             behavior: "smooth",
-        });
+        }));
     });
 
 </script>
