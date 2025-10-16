@@ -68,7 +68,7 @@
                 buttonText += '<button class="sidebar-button" onclick="window.open(`http://education-test.etagi.com/_wt/career_track`, `_self`)">Просмотреть трек</button>';
             }
             else if(startTrack.percent < 100){
-                buttonText += '<button class="sidebar-button" title="Пройдите «Старт в недвижимости», чтобы открыть трек">Начать</button>'
+                buttonText += '<button class="sidebar-button">Начать</button>'
             }
             else if(trackPercent == null){
                 buttonText += '<button class="sidebar-button" onclick="window.open(`http://education-test.etagi.com/_wt/career_track`, `_self`)">Начать</button>'
@@ -186,7 +186,6 @@
                                 <img src="https://i.ibb.co/9HTD4qpB/image.png">'
                                 + courseCount(track.id) + '
                                 </div>
-                                <img id="info" src="https://i.ibb.co/53V2wBt/info.png">
                             </div>
                             <h3 class="sidebar-title">«' + track.name + '»</h3>
                             <p class="sidebar-text">' + descriptions[track.id-1] + '</p>
@@ -259,7 +258,8 @@
     }
 
     .container {
-        margin: 40px 60px 0px 350px;
+        margin: 2% 0;
+        width: 100%;
         display: flex;
         justify-content: center;
         gap: var(--tiles_gap);
@@ -268,7 +268,7 @@
 
     .main-card-wrapper {
         display: flex;
-        width: 600px;
+        width: 31.3%;
     }
 
     .main-card {
@@ -282,7 +282,7 @@
     }
 
     .main-card img {
-        width: 600px;
+        width: 100%;
         height: 100%;
         object-fit: cover;
     }
@@ -378,7 +378,7 @@
         display: flex;
         flex-direction: column;
         gap: var(--tiles_gap);
-        width: 600px;
+        width: 31.3%;
     }
 
     .sidebar-card{
@@ -392,7 +392,7 @@
     }
 
     .sidebar img {
-        width: 200px;
+        width: 33.3%;
         height: 100%;
         object-fit: cover;
     }
@@ -423,10 +423,6 @@
     .sidebar-header img {
         width: 16px;
         height: 16px;
-    }
-
-    #info {
-        margin-left: auto;
     }
 
     .sidebar-titlebody {
@@ -629,6 +625,16 @@
         color: #fff;
     }
 
+    .tooltip {
+        display: none;
+        padding: 10px; 
+        position: absolute;
+        background: #000;
+        border-radius: 4px; 
+        color: #fff;
+        overflow: hidden;
+    }
+
     @media (max-width: 500px) {
 
         :root {
@@ -742,29 +748,32 @@
     }
 </style>
 
-<div class="container">
-    <div class="main-card-wrapper">
-        <%=drawMainCard()%>
+<div id="main-container">
+    <div class="container">
+        <div class="main-card-wrapper">
+            <%=drawMainCard()%>
+        </div>
+        <div class="sidebar">
+            <%=drawSidebar()%>
+        </div>
     </div>
-    <div class="sidebar">
-        <%=drawSidebar()%>
-    </div>
-</div>
+    <div class="tooltip">Пройди «Старт в недвижимости», чтобы открыть трек</div>
 
-<div id="modal-overlay" class="modal-overlay">
-    <div class="modal">
-        <button class="close-btn" id="close-btn">×</button>
-        <h2 class="modal-title">Укажите свой опыт в нашей компании</h2>
-        <div class="modal-content">
-            <div class="option-card">
-                <img src="https://i.ibb.co/MkKp4N7M/Group-87.png" alt="Новичок" class="option-image">
-                <p class="option-text">Стаж: 0-6 месяцев</p>
-                <button class="option-btn" onclick="window.open('http://education-test.etagi.com/_wt/career_track', _self)">Я новичок!</button>
-            </div>
-            <div class="option-card">
-                <img src="https://i.ibb.co/HLvDNpcs/Group-89.png" alt="Опытный" class="option-image">
-                <p class="option-text">Стаж: 6+ месяцев</p>
-                <button class="option-btn" id="skilled_btn">Я опытный!</button>
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal">
+            <button class="close-btn" id="close-btn">×</button>
+            <h2 class="modal-title">Укажите свой опыт в нашей компании</h2>
+            <div class="modal-content">
+                <div class="option-card">
+                    <img src="https://i.ibb.co/MkKp4N7M/Group-87.png" alt="Новичок" class="option-image">
+                    <p class="option-text">Стаж: 0-6 месяцев</p>
+                    <button class="option-btn" onclick="window.open('http://education-test.etagi.com/_wt/career_track', _self)">Я новичок!</button>
+                </div>
+                <div class="option-card">
+                    <img src="https://i.ibb.co/HLvDNpcs/Group-89.png" alt="Опытный" class="option-image">
+                    <p class="option-text">Стаж: 6+ месяцев</p>
+                    <button class="option-btn" id="skilled_btn">Я опытный!</button>
+                </div>
             </div>
         </div>
     </div>
@@ -778,9 +787,27 @@
     if (isMobile) {
         document.getElementById('main-card').href = 'http://education-test.etagi.com/_wt/career_track';
         document.getElementById('sidebar-card').href = 'http://education-test.etagi.com/_wt/career_track';
-    } else {
-        console.log("Это настольное устройство.");
     }
+    else {
+        document.getElementById('main-container').style.width = window.innerWidth + 'px';
+    }
+
+    $('.sidebar-card').mousemove(function(e){
+        var X = e.pageX;
+        var Y = e.pageY;
+        var top = Y  + 10 + 'px';
+        var left = X  + 10 + 'px';
+        $('.tooltip').css({
+            display:"block",
+            top: top,
+            left: left
+        });
+    });
+    $('.sidebar-card').mouseout(function(){
+        $('.tooltip').css({
+            display:"none"
+        });
+    });
 
     const openBtn = document.getElementById('open');
     const modalOverlay = document.getElementById('modal-overlay');

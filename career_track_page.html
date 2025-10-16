@@ -178,12 +178,15 @@ let coursesBlockJS = `<%=drawCourses()%>`;
         --page_main_color: #545F92;
     }
 
+    #main-container {
+        height: 100%;
+    }
+
     .container {
         margin: 0 0 0 30px;
         padding: 0;
         color: #6a6a6a;
         box-sizing: border-box;
-        width: 100%;
     }
 
     .head {
@@ -227,7 +230,6 @@ let coursesBlockJS = `<%=drawCourses()%>`;
     }
 
     .body-container {
-        max-width: 100%;
         margin: 0 auto;
     }
 
@@ -419,17 +421,23 @@ let coursesBlockJS = `<%=drawCourses()%>`;
         flex-direction: column;
         position: relative;
         height: 320px;
-        width: 247px;
+        width: 15.5%;
         border-radius: 10px;
         background-color: white;
         cursor: pointer;
+        align-items: center;
+        transition: 0.3s
     }
 
-    .course-card img {
+    .course-card:hover {
+        background-color: #f2f2f2;
+    }
+
+    .course-img {
         height: 150px;
-        width: 210px;
+        width: 83%;
         border-radius: 8px;
-        margin: 20px 20px 10px 20px;
+        margin: 20px 0 10px 0;
         object-fit: cover;
     }
 
@@ -442,7 +450,8 @@ let coursesBlockJS = `<%=drawCourses()%>`;
     }
 
     .course-card-progressbar {
-        margin: 0 20px 10px 20px;
+        margin: 0 0 10px 0;
+        width: 80%;
         background-color: #F6F6F6;
         height: 20px;
         overflow: hidden;
@@ -459,7 +468,7 @@ let coursesBlockJS = `<%=drawCourses()%>`;
     }
 
     .course-card-percent {
-        font-size: 1rem;
+        font-size: 1.5rem;
         text-align: center;
         left: 50%;
         position: absolute;
@@ -467,17 +476,20 @@ let coursesBlockJS = `<%=drawCourses()%>`;
         color: var(--text_secondary_color);
     }
 
-    @media (max-width: 500px) {
+    @media (max-width: 768px) {
+
+        .container {
+            margin: 0 0 0 2%;
+        }
 
         .head {
-            width: 100%;
+            padding: 20px 0;
             text-align: center;
         }
 
         .head h1 {
             font-size: 2.5rem;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-            margin: 7% 5% 7% 10%;
         }
 
         .head p {
@@ -485,7 +497,7 @@ let coursesBlockJS = `<%=drawCourses()%>`;
         }
 
         .body-container {
-            width: 100%;
+            margin: 0 auto;
         }
 
         .progress-bar {
@@ -497,8 +509,7 @@ let coursesBlockJS = `<%=drawCourses()%>`;
         }
 
         .tabs {
-            gap: 2%;
-            margin: 10px 0;
+            margin: 10px 0 0 12%;
         }
 
         .tab {
@@ -566,7 +577,7 @@ let coursesBlockJS = `<%=drawCourses()%>`;
         .sections {
             gap: 10px;
             margin-left: 17.5%;
-            width: 76%;
+            width: 78%;
         }
 
         .section {
@@ -604,6 +615,7 @@ let coursesBlockJS = `<%=drawCourses()%>`;
             height: 60px;
             width: 315px;
             border-radius: 12px;
+            margin-bottom: 7px;
         }
 
         .course-card img {
@@ -614,8 +626,8 @@ let coursesBlockJS = `<%=drawCourses()%>`;
         }
 
         .course-card h3 {
-            padding: 10px;
-            font-size: 1.5rem;
+            padding: 15px 10px 10px 10px;
+            font-size: 1.4rem;
             font-weight: bold;
             height: 40px;
             overflow: hidden;
@@ -635,42 +647,44 @@ let coursesBlockJS = `<%=drawCourses()%>`;
     }
 </style>
 
-<div class="container">
+<div id="main-container">
+    <div class="container">
     <%=drawHead()%>
 
-    <div class="body-container">
-        <%=drawProgress()%>
-        <%=drawTabs()%>
+        <div class="body-container">
+            <%=drawProgress()%>
+            <%=drawTabs()%>
 
-        <div class="modules-container">
-            <button id="scroll-prev"><img class="button-img" src="http://education-test.etagi.com/download_file.html?file_id=7558751212548830488"></button>
-            <div class="modules" id="scroll-container">
-                <%=drawModules()%>
+            <div class="modules-container">
+                <button id="scroll-prev"><img class="button-img" src="http://education-test.etagi.com/download_file.html?file_id=7558751212548830488"></button>
+                <div class="modules" id="scroll-container">
+                    <%=drawModules()%>
+                </div>
+                <button id="scroll-next"><img class="button-img" src="http://education-test.etagi.com/download_file.html?file_id=7558756114306075470"></button>
             </div>
-            <button id="scroll-next"><img class="button-img" src="http://education-test.etagi.com/download_file.html?file_id=7558756114306075470"></button>
-        </div>
 
-        <div class="sections section1">
-            <%=drawCourses()%>
-        </div>
-        <div class="sections section2" style="display: none">
-            <div class="section">
-                <div class="section-bar">
-                    <div class="section-title">Адаптация</div>
-                </div>
+            <div class="sections section1">
+                <%=drawCourses()%>
+            </div>
+            <div class="sections section2" style="display: none">
+                <div class="section">
+                    <div class="section-bar">
+                        <div class="section-title">Адаптация</div>
+                    </div>
 
-                <div class="section-progressbar">
-                    <div class="section-progress"></div>
-                    <div class="section-percent">0%</div>
-                </div>
+                    <div class="section-progressbar">
+                        <div class="section-progress"></div>
+                        <div class="section-percent">0%</div>
+                    </div>
 
-                <div class="course-cards">
-                    <div class="course-card">
-                        <img src="http://education.etagi.com/download_file.html?file_id=7370968239122859285">
-                        <h3>Программа адаптации СПН. Быстрый старт в недвижимости</h3>
-                        <div class="course-card-progressbar">
-                            <div class="course-card-progress"></div>
-                            <div class="course-card-percent">0%</div>
+                    <div class="course-cards">
+                        <div class="course-card">
+                            <img src="http://education.etagi.com/download_file.html?file_id=7370968239122859285">
+                            <h3>Программа адаптации СПН. Быстрый старт в недвижимости</h3>
+                            <div class="course-card-progressbar">
+                                <div class="course-card-progress"></div>
+                                <div class="course-card-percent">0%</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -680,6 +694,16 @@ let coursesBlockJS = `<%=drawCourses()%>`;
 </div>
 
 <script>
+
+    mainContainer = document.getElementById('main-container');
+
+    const userAgent = navigator.userAgent;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(userAgent);
+
+    if (!isMobile) {
+        mainContainer.style.width = window.innerWidth + 'px';
+    }
+
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
