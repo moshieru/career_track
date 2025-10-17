@@ -163,7 +163,7 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
                     if(courses.name == competenceObj.TopElem.name){
                     courseObj = OpenDoc(UrlFromDocID(Int(courses.course_id)));
                     coursesBlock += '
-                    <div class="course-card">
+                    <div class="course-card" onclick="window.open(`http://education.etagi.com/_wt/'+ courseObj.TopElem.id +'`, `_blank`)">
                     <img class="course-img" src="http://education.etagi.com/download_file.html?file_id='+ courseObj.TopElem.resource_id +'">
                     <h3>'+ courseObj.TopElem.name +'</h3>
                     <div class="course-card-progressbar">
@@ -257,6 +257,7 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
     %>
 
     let coursesBlockJS = `<%=drawCourses()%>`;
+    // window.open('http://education.etagi.com/_wt/7422924598279082941', '_blank')
 </script>
 <style>
 
