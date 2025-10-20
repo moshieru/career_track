@@ -66,9 +66,18 @@ function drawTabs()
 
     if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_id == 6 || activeTrack.track_id == 7){
         tabs += '<div class="tabs">
+            <div class="tab-point">
             <div class="tab active" data-section="section1" data-module="module1">0-3 месяца</div>
+            <img src="http://education-test.etagi.com/download_file.html?file_id=7563155087986396789">
+            </div>
+            <div class="tab-point">
         <div class="tab" data-section="section2" data-module="module2">4-6 месяцев</div>
+        <img src="http://education-test.etagi.com/download_file.html?file_id=7563155087986396789">
+        </div>
+        <div class="tab-point">
         <div class="tab" data-section="section3" data-module="module3">Итоговый тест</div>
+        <img src="http://education-test.etagi.com/download_file.html?file_id=7563155087986396789">
+        </div>
     </div>'
     }
 
@@ -86,8 +95,7 @@ function drawModules(level){
             levelCompetencesForModule = firstLevelCompetences;
         } else if(level == 'level2') {
             levelCompetencesForModule = secondLevelCompetences;
-        } else{
-
+        }else{
             return modules;
         }
     }
@@ -179,6 +187,14 @@ function drawCourses(level)
     return coursesBlock;
 }
 
+function drawTest() {
+    test = "";
+
+    test += '<div class="test-container">Тут тест<button>Начать тест</button></div>';
+
+    return test;
+}
+
 function createTab(level){
     tab += '<div class=""+level+"">';
     tab += drawModules(level);
@@ -209,7 +225,8 @@ if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_i
                 '</div>
                 <div class="sections section2" style="display: none">'
                     + drawCourses("level2") +
-                '</div>';
+                '</div>'
+
     // tab1 += '<div class="level1">';
     // tab1 += drawModules();
     // tab1 += drawCourses();
@@ -269,9 +286,9 @@ if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_i
         flex-direction: column;
         justify-content: center;
         text-align: left;
-        padding: 60px 100px;
         color: var(--text_header_color);
         position: relative;
+        padding: 3% 10%;
     }
 
     .head::before {
@@ -338,6 +355,18 @@ if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_i
         cursor: pointer;
         font-size: 2rem;
         position: relative;
+    }
+
+    .tab-point {
+        display: flex;
+        flex-direction: row;
+        gap: 5px;
+    }
+
+    .tab-point img {
+        height: 15px;
+        width: 15px;
+        display: none;
     }
 
     .tab.active {
@@ -453,7 +482,7 @@ if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_i
         font-size: 3rem;
         font-weight: 500;
         color: #F6F6F6;
-        padding: 10px 0 0 15px;
+        padding: 10px 15px;
     }
 
     .section-progressbar {
@@ -466,7 +495,7 @@ if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_i
 
     .section-progress {
         height: 100%;
-        background-color: var(--page_secondary_color);
+        background-color: var(--track_progress_color);
         width: 0;
         position: absolute;
         z-index: 1;
@@ -492,12 +521,14 @@ if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_i
         flex-direction: column;
         position: relative;
         height: 320px;
-        width: 15.5%;
+        width: 15.4%;
         border-radius: 10px;
         background-color: white;
         cursor: pointer;
         align-items: center;
-        transition: 0.3s
+        transition: 0.3s;
+        border: 0.5px solid #c7c7c773;
+        box-shadow: 0 4px 8px rgba(231, 231, 231, 0.1);
     }
 
     .course-card:hover {
@@ -743,6 +774,20 @@ if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_i
         mainContainer.style.width = window.innerWidth + 'px';
     }
 
+    modules = document.querySelector('.modules');
+    scrollNext = document.getElementById('scroll-next');
+    scrollPrev = document.getElementById('scroll-prev');
+
+    widthPercent = (modules.width / mainContainer.width) * 100;
+
+    console.log(widthPercent);
+
+    if(widthPercent >= 60)
+    {
+        scrollNext.style.display = 'none';
+        scrollPrev.style.display = 'none';
+    }
+
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -756,14 +801,14 @@ if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_i
 
     const container = document.querySelectorAll('.scroll-container');
 
-    document.getElementById('scroll-next').addEventListener('click', () => {
+    scrollNext.addEventListener('click', () => {
         container.forEach(t => t.scrollBy({
             left: 600,
             behavior: "smooth",
         }));
     });
 
-    document.getElementById('scroll-prev').addEventListener('click', () => {
+    scrollPrev.addEventListener('click', () => {
         container.forEach(t => t.scrollBy({
             left: -600,
             behavior: "smooth",
