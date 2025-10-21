@@ -319,6 +319,7 @@
     }
 
     .progress-bar {
+        border-top: 2px solid var(--card_color);
         height: 40px;
         background-color: var(--progress-bar_color);
         overflow: hidden;
@@ -824,24 +825,24 @@
         document.getElementById('main-container').style.width = window.innerWidth + 'px';
     }
 
-<%if(!isStartPassed()){%>
-    $('.sidebar-card').mousemove(function(e){
-        var X = e.pageX;
-        var Y = e.pageY;
-        var top = Y  + 10 + 'px';
-        var left = X  + 10 + 'px';
-        $('.tooltip').css({
-            display:"block",
-            top: top,
-            left: left
+    <%if(!isStartPassed()){%>
+        $('.sidebar-card').mousemove(function(e){
+            var X = e.pageX;
+            var Y = e.pageY;
+            var top = Y  + 10 + 'px';
+            var left = X  + 10 + 'px';
+            $('.tooltip').css({
+                display:"block",
+                top: top,
+                left: left
+            });
         });
-    });
-    $('.sidebar-card').mouseout(function(){
-        $('.tooltip').css({
-            display:"none"
+        $('.sidebar-card').mouseout(function(){
+            $('.tooltip').css({
+                display:"none"
+            });
         });
-    });
-<%}%>
+    <%}%>
 
     const openBtn = document.getElementById('open');
     const modalOverlay = document.getElementById('modal-overlay');
