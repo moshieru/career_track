@@ -1,238 +1,268 @@
 <%
-collabTracks = XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "'");
-collabTracksCount = ArrayCount(collabTracks);
+    collabTracks = XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "'");
+    collabTracksCount = ArrayCount(collabTracks);
 
-active_track = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND main_or_not = true"));
-tracks = XQuery("sql: SELECT * FROM career_tracks.tracks");
-startTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND track_id = 1"));
-descriptions = ["Вы освоите все тонкости сделок: от юридических аспектов до техник продаж и маркетинга. Вы узнаете, как строить базу клиентов, вести переговоры и успешно закрывать сделки.", "Вы хотите быть успешным риелтором и при этом уделять достаточно времени семье? Этот карьерный трек покажет, как эффективно управлять своим временем и ресурсами.", "Вы уже добились успеха в сфере недвижимости, но чувствуете, что пора двигаться дальше? Этот трек создан для тех, кто готов выйти на новый уровень и освоить передовые стратегии рынка.", "Готовы переосмыслить свой потенциал и достичь новых вершин? Этот трек — ваш ключ к будущему в недвижимости. Обучайтесь сегодня, чтобы не просто работать на рынке, а определять его правила!"];
+    active_track = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND main_or_not = true"));
+    tracks = XQuery("sql: SELECT * FROM career_tracks.tracks");
+    startTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND track_id = 1"));
+    descriptions = ["Вы освоите все тонкости сделок: от юридических аспектов до техник продаж и маркетинга. Вы узнаете, как строить базу клиентов, вести переговоры и успешно закрывать сделки.", "Вы хотите быть успешным риелтором и при этом уделять достаточно времени семье? Этот карьерный трек покажет, как эффективно управлять своим временем и ресурсами.", "Вы уже добились успеха в сфере недвижимости, но чувствуете, что пора двигаться дальше? Этот трек создан для тех, кто готов выйти на новый уровень и освоить передовые стратегии рынка.", "Готовы переосмыслить свой потенциал и достичь новых вершин? Этот трек — ваш ключ к будущему в недвижимости. Обучайтесь сегодня, чтобы не просто работать на рынке, а определять его правила!"];
 
-function courseCount(track_id)
-{
-count = ArrayCount(XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + track_id + "'"))
-return ('<span>' + count + ' обучений</span>');
-}
+    function courseCount(track_id, mode)
+    {
+        courseAmount = "";
 
-function defineExperience(track_id)
-{
-exp = "";
-if(track_id == 1 || track_id == 5 || track_id == 6 || track_id == 7){
-exp += '<span>0-6 месяцев</span>';
-}
-else{
-exp += '<span>6+ месяцев</span>';
-}
+        if(track_id == 1 || track_id == 5 || track_id == 6 || track_id == 7)
+        {
+            count1 = ArrayCount(XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + track_id + "' AND level_id = 1"));
+            count2 = ArrayCount(XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + track_id + "' AND level_id = 2"));
 
-return exp;
-}
+            if(track_id == active_track.track_id)
+            {
+                courseAmount += '<div class="card-point" id="start-track">
+                <img src="https://i.ibb.co/9HTD4qpB/image.png" alt="a">
+                <span>' + count1 + ' обучений</span>
+                </div>
+                <div class="card-point" id="start-track">
+                <span>+</span>
+                </div>
+                <div class="card-point" id="start-track">
+                <img src="https://i.ibb.co/9HTD4qpB/image.png" alt="a">
+                <span>' + count2 + ' обучений</span>
+                </div>'
+            }else {
+                count = ArrayCount(XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + track_id + "'"))
+                courseAmount += '<div class="card-point" id="start-track">
+                <img src="https://i.ibb.co/9HTD4qpB/image.png" alt="a">
+                <span>' + count + ' обучений</span>
+                </div>';
+            }
+        }else {
+            count = ArrayCount(XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + track_id + "'"))
+            courseAmount += '<div class="card-point" id="start-track">
+                <img src="https://i.ibb.co/9HTD4qpB/image.png" alt="a">
+                <span>' + count + ' обучений</span>
+                </div>';
+        }
 
-function defineActiveTrackName(track_id)
-{
-name = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.tracks WHERE id = '" + track_id + "'"));
-return ('<h3 class="card-title">«' + name.name + '»</h3>');
-}
+        return courseAmount;
+    }
 
-function defineActiveTrackPicture(track_id)
-{
-picture = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.tracks WHERE id = '" + track_id + "'"));
-return ('<img src="http://education-test.etagi.com/download_file.html?file_id=' + picture.big_image + '">');
-}
+    function defineExperience(track_id)
+    {
+        exp = "";
+        if(track_id == 1 || track_id == 5 || track_id == 6 || track_id == 7){
+            exp += '<span>0-6 месяцев</span>';
+        }
+        else{
+            exp += '<span>6+ месяцев</span>';
+        }
 
-function defineButtonText(track_id)
-{
-buttonText = "";
-trackPercent = null;
-isActive = false;
+        return exp;
+    }
 
-trackPercents = XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND track_id = '" + track_id + "'");
-for(track in trackPercents){
-trackPercent = track.percent;
-if(track.track_id == active_track.track_id){ isActive = true; }
-}
+    function defineActiveTrackName(track_id)
+    {
+        name = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.tracks WHERE id = '" + track_id + "'"));
+        return ('<h3 class="card-title">«' + name.name + '»</h3>');
+    }
 
-if(isActive)
-{
-if(trackPercent == 100){
-buttonText += '<button class="start-button" onclick="window.open(`http://education-test.etagi.com/_wt/career_track`, `_self`)">Просмотреть трек</button>';
-}
-else{
-buttonText += '<button class="start-button" onclick="window.open(`http://education-test.etagi.com/_wt/career_track`, `_self`)"> Продолжить</button>';
-}
-}
-else
-{
-if(trackPercent == 0 || (trackPercent > 0 && trackPercent < 100)){
-buttonText += '<button class="sidebar-button" onclick="window.open(`http://education-test.etagi.com/_wt/career_track`, `_self`)">Продолжить</button>';
-}
-else if(trackPercent == 100){
-buttonText += '<button class="sidebar-button" onclick="window.open(`http://education-test.etagi.com/_wt/career_track`, `_self`)">Просмотреть трек</button>';
-}
-else if(startTrack.percent < 100){
-buttonText += '<button class="sidebar-button">Начать</button>'
-}
-else if(trackPercent == null){
-buttonText += '<button class="sidebar-button" onclick="window.open(`http://education-test.etagi.com/_wt/career_track`, `_self`)">Начать</button>'
-}
-}
+    function defineActiveTrackPicture(track_id)
+    {
+        picture = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.tracks WHERE id = '" + track_id + "'"));
+        return ('<img src="http://education-test.etagi.com/download_file.html?file_id=' + picture.big_image + '">');
+    }
 
-return buttonText;
-}
+    function defineButtonText(track_id)
+    {
+        buttonText = "";
+        trackPercent = null;
+        isActive = false;
 
-function drawMainCard(){
+        trackPercents = XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND track_id = '" + track_id + "'");
+        for(track in trackPercents){
+            trackPercent = track.percent;
+            if(track.track_id == active_track.track_id){ isActive = true; }
+        }
 
-mainCard = "";
+        if(isActive)
+        {
+            if(trackPercent == 100){
+                buttonText += '<button class="start-button" onclick="window.open(`http://education-test.etagi.com/_wt/career_track`, `_self`)">Просмотреть трек</button>';
+            }
+            else{
+                buttonText += '<button class="start-button" onclick="window.open(`http://education-test.etagi.com/_wt/career_track`, `_self`)"> Продолжить</button>';
+            }
+        }
+        else
+        {
+            if(trackPercent == 0 || (trackPercent > 0 && trackPercent < 100)){
+                buttonText += '<button class="sidebar-button" onclick="window.open(`http://education-test.etagi.com/_wt/career_track`, `_self`)">Продолжить</button>';
+            }
+            else if(trackPercent == 100){
+                buttonText += '<button class="sidebar-button" onclick="window.open(`http://education-test.etagi.com/_wt/career_track`, `_self`)">Просмотреть трек</button>';
+            }
+            else if(startTrack.percent < 100){
+                buttonText += '<button class="sidebar-button">Начать</button>'
+            }
+            else if(trackPercent == null){
+                buttonText += '<button class="sidebar-button" onclick="window.open(`http://education-test.etagi.com/_wt/career_track`, `_self`)">Начать</button>'
+            }
+        }
 
-if(collabTracksCount > 0){
-mainCard += '
-<a class="main-card" id="main-card">' + defineActiveTrackPicture(active_track.track_id) + '
-    <div class="progress-bar">
-        <div class="percent">' + active_track.percent + '%</div>
-        <div class="progress" id="progress" style="width: ' + active_track.percent + '%"></div>
-    </div>
-    <div class="card-content">
-        <div class="card-header">
-            <div class="card-point">
-                <img src="https://i.ibb.co/SwRnfFPX/image.png" alt="a">'
-                + defineExperience() + '
-            </div>
-            <div class="card-point" id="start-track">
-                <img src="https://i.ibb.co/9HTD4qpB/image.png" alt="a">'
-                + courseCount(1) + '
-            </div>
-        </div>'
-        + defineActiveTrackName(active_track.track_id) + '
-        <p class="card-text">' + descriptions[active_track.track_id - 1] + '</p>
-        <div class="main-button">'
-            + defineButtonText(active_track.track_id) + '
-        </div>
-    </div>
-</a>';
-}
-else{
-mainCard += '
-<a class="main-card">
-    <img src="http://education-test.etagi.com/download_file.html?file_id=7556131593364382624" alt="Старт в недвижимости">
-    <div class="progress-bar">
-        <div class="percent">0%</div>
-        <div class="progress" id="progress"></div>
-    </div>
-    <div class="card-content">
-        <div class="card-header">
-            <div class="card-point">
-                <img src="https://i.ibb.co/SwRnfFPX/image.png" alt="a">'
-                + defineExperience(1) + '
-            </div>
-            <div class="card-point" id="start-track">
-                <img src="https://i.ibb.co/9HTD4qpB/image.png" alt="a">'
-                + courseCount(1) + '
-            </div>
-        </div>
-        <h3 class="card-title">«Старт в недвижимости»</h3>
-        <p class="card-text">Вы быстро освоите все тонкости профессии: от юридических аспектов сделок с
-            недвижимостью до эффективных техник продаж и маркетинга. Вы узнаете, как строить базу
-            клиентов, вести переговоры и успешно закрывать сделки.</p>
-        <div class="main-button">
-            <button class="start-button" id="open">Начать</button>
-        </div>
-    </div>
-</a>';
-}
+        return buttonText;
+    }
 
-return mainCard;
-}
+    function drawMainCard(){
 
-function drawProgressBar(track_id){
-sideBarProgress = "";
-currTrack = null;
+        mainCard = "";
 
-currTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND track_id = '" + track_id + "'"));
+        if(collabTracksCount > 0){
+            mainCard += '
+            <a class="main-card" id="main-card">' + defineActiveTrackPicture(active_track.track_id) + '
+                <div class="progress-bar">
+                    <div class="percent">' + active_track.percent + '%</div>
+                    <div class="progress" id="progress" style="width: ' + active_track.percent + '%"></div>
+                </div>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-point">
+                            <img src="https://i.ibb.co/SwRnfFPX/image.png" alt="a">'
+                            + defineExperience(active_track.track_id) + '
+                        </div>'
+                            + courseCount(active_track.track_id) + '
+                    </div>'
+                    + defineActiveTrackName(active_track.track_id) + '
+                    <p class="card-text">' + descriptions[active_track.track_id - 1] + '</p>
+                    <div class="main-button">'
+                        + defineButtonText(active_track.track_id) + '
+                    </div>
+                </div>
+            </a>';
+        }
+        else{
+            mainCard += '
+            <a class="main-card">
+                <img src="http://education-test.etagi.com/download_file.html?file_id=7556131593364382624" alt="Старт в недвижимости">
+                <div class="progress-bar">
+                    <div class="percent">0%</div>
+                    <div class="progress" id="progress"></div>
+                </div>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-point">
+                            <img src="https://i.ibb.co/SwRnfFPX/image.png" alt="a">'
+                            + defineExperience(1) + '
+                        </div>'
+                            + courseCount(1) + '
+                    </div>
+                    <h3 class="card-title">«Старт в недвижимости»</h3>
+                    <p class="card-text">Вы быстро освоите все тонкости профессии: от юридических аспектов сделок с
+                        недвижимостью до эффективных техник продаж и маркетинга. Вы узнаете, как строить базу
+                        клиентов, вести переговоры и успешно закрывать сделки.</p>
+                    <div class="main-button">
+                        <button class="start-button" id="open">Начать</button>
+                    </div>
+                </div>
+            </a>';
+        }
 
-if(startTrack.percent == 100 && currTrack != undefined){
-sideBarProgress += '<div class="sidebar-progressbar">
-    <div class="sidebar-percent" id="progress">' + currTrack.percent + '%</div>
-    <div class="sidebar-progress" style="width:' + currTrack.percent + '%"></div>
-</div>';
-}
-else if(startTrack.percent == 100 && currTrack == undefined){
-sideBarProgress += '<div class="sidebar-progressbar">
-    <div class="sidebar-percent">0%</div>
-    <div class="sidebar-progress"></div>
-</div>';
-}
-else{
-sideBarProgress = null;
-}
+        return mainCard;
+    }
 
-return sideBarProgress;
-}
+    function drawProgressBar(track_id){
+        sideBarProgress = "";
+        currTrack = null;
 
-function drawSidebar(){
+        currTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND track_id = '" + track_id + "'"));
 
-sidebarCards = "";
+        if(startTrack.percent == 100 && currTrack != undefined){
+            sideBarProgress += '<div class="sidebar-progressbar">
+                <div class="sidebar-percent" id="progress">' + currTrack.percent + '%</div>
+                <div class="sidebar-progress" style="width:' + currTrack.percent + '%"></div>
+            </div>';
+        }
+        else if(startTrack.percent == 100 && currTrack == undefined){
+            sideBarProgress += '<div class="sidebar-progressbar">
+                <div class="sidebar-percent">0%</div>
+                <div class="sidebar-progress"></div>
+            </div>';
+        }
+        else{
+            sideBarProgress = null;
+        }
 
-if (collabTracksCount == 0 || startTrack.percent < 100){
-for(track in tracks){
-if(track.id != 1 && track.id != 5 && track.id != 6 && track.id != 7){
-sidebarCards += '
-<div class="sidebar-card">
-    <img src="http://education-test.etagi.com/download_file.html?file_id=' + track.image + '">
-    <div class="sidebar-content">
-        <div class="sidebar-header">
-            <div class="sidebar-point">
-                <img src="https://i.ibb.co/SwRnfFPX/image.png">
-                <span>6+ месяцев</span>
-            </div>
-            <div class="sidebar-point">
-                <img src="https://i.ibb.co/9HTD4qpB/image.png">'
-                + courseCount(track.id) + '
-            </div>
-        </div>
-        <h3 class="sidebar-title">«' + track.name + '»</h3>
-        <p class="sidebar-text">' + descriptions[track.id-1] + '</p>
-        <div class="secondary-button">
-            <button class="sidebar-button">Начать</button>
-        </div>
-    </div>
-</div>'
-}
-else{
-continue;
-}
-}
-}
-else if(collabTracksCount > 0){
-for(track in tracks){
-if(track.id != active_track.track_id && track.id != 5 && track.id != 6 && track.id != 7){
-sidebarCards += '
-<a class="sidebar-card" id="sidebar-card">
-    <img src="http://education-test.etagi.com/download_file.html?file_id=' + track.image + '">
-    <div class="sidebar-content">
-        <div class="sidebar-header">
-            <div class="sidebar-point">
-                <img src="https://i.ibb.co/SwRnfFPX/image.png">'
-                + defineExperience() + '
-            </div>
-            <div class="sidebar-point">
-                <img src="https://i.ibb.co/9HTD4qpB/image.png">'
-                + courseCount(track.id) + '
-            </div>
-        </div>
-        <div class="sidebar-titlebody">
-            <h3 class="sidebar-title">«' + track.name + '»</h3>'
-            + drawProgressBar(track.id) + '
-        </div>
-        <p class="sidebar-text">' + descriptions[track.id-1] + '</p>
-        <div class="secondary-button">'
-            + defineButtonText(track.id) + '
-        </div>
-    </div>
-</a>'
-}
-}
-}
+        return sideBarProgress;
+    }
 
-return sidebarCards;
-}
+    function drawSidebar(){
+
+        sidebarCards = "";
+        
+        if (collabTracksCount == 0 || startTrack.percent < 100){
+            for(track in tracks){
+                if(track.id != 1 && track.id != 5 && track.id != 6 && track.id != 7){
+                    sidebarCards += '
+                    <div class="sidebar-card">
+                        <img src="http://education-test.etagi.com/download_file.html?file_id=' + track.image + '">
+                        <div class="sidebar-content">
+                            <div class="sidebar-header">
+                                <div class="sidebar-point">
+                                    <img src="https://i.ibb.co/SwRnfFPX/image.png">
+                                    <span>6+ месяцев</span>
+                                </div>'
+                                + courseCount(track.id) + '
+                            </div>
+                            <h3 class="sidebar-title">«' + track.name + '»</h3>
+                            <p class="sidebar-text">' + descriptions[track.id-1] + '</p>
+                            <div class="secondary-button">
+                                <button class="sidebar-button">Начать</button>
+                            </div>
+                        </div>
+                    </div>'                    
+                }
+                else{
+                    continue;
+                }
+            }
+        }
+        else if(collabTracksCount > 0){
+            for(track in tracks){
+                if(track.id != active_track.track_id && track.id != 5 && track.id != 6 && track.id != 7){
+                    sidebarCards += '
+                    <a class="sidebar-card" id="sidebar-card">
+                        <img src="http://education-test.etagi.com/download_file.html?file_id=' + track.image + '">
+                        <div class="sidebar-content">
+                            <div class="sidebar-header">
+                                <div class="sidebar-point">
+                                    <img src="https://i.ibb.co/SwRnfFPX/image.png">'
+                                    + defineExperience() + '
+                                </div>'
+                                    + courseCount(track.id) + '
+                            </div>
+                            <div class="sidebar-titlebody">
+                                <h3 class="sidebar-title">«' + track.name + '»</h3>'
+                                + drawProgressBar(track.id) + '                       
+                                </div>
+                            <p class="sidebar-text">' + descriptions[track.id-1] + '</p>
+                            <div class="secondary-button">'
+                                + defineButtonText(track.id) + '
+                            </div>
+                        </div>
+                    </a>'
+                }
+            }
+        }
+
+        return sidebarCards;
+    }
+
+    function isStartPassed() {
+        check = true;
+
+        if(startTrack.percent == 100){ check = true; }else{ check = false; }
+
+        return check;
+    }
 %>
 
 <style>
@@ -279,6 +309,7 @@ return sidebarCards;
         flex-direction: column;
         position: relative;
         overflow: hidden;
+        border: 1px solid #C7C7C7;
     }
 
     .main-card img {
@@ -383,12 +414,13 @@ return sidebarCards;
 
     .sidebar-card{
         border-radius: var(--tile_border_radius);
+        border: 1px solid #C7C7C7;
         box-shadow: var(--custom_box-shadow);
         overflow: hidden;
         display: flex;
         flex-direction: row;
         position: relative;
-    <%if(collabTracksCount==0){%>background-color: var(--sidebar_card_color);<%}else if(startTrack.percent == 100){%>background-color: var(--card_color);<%}%>
+        <%if(collabTracksCount==0){%>background-color: var(--sidebar_card_color);<%}else if(startTrack.percent == 100){%>background-color: var(--card_color);<%}%>
     }
 
     .sidebar img {
@@ -428,7 +460,7 @@ return sidebarCards;
     .sidebar-titlebody {
         display: flex;
         flex-direction: row;
-        gap: 40px;
+        gap: 40px;       
     }
 
     .sidebar-title {
@@ -446,8 +478,8 @@ return sidebarCards;
         overflow: hidden;
         border-radius: 8px;
         margin-top: 3px;
-        margin-left: auto;
-        position: relative;
+        margin-left: auto;     
+        position: relative;          
     }
 
     .sidebar-progress {
@@ -489,13 +521,13 @@ return sidebarCards;
         font-weight: bold;
         cursor: not-allowed;
         text-align: center;
-    <%if(collabTracksCount==0){%>background-color: #898989; color: #C7C7C7;<%}else if(startTrack.percent == 100){%>background-color: var(--button_color); color: #fff; cursor: pointer;<%}%>
+        <%if(collabTracksCount==0){%>background-color: #898989; color: #C7C7C7;<%}else if(startTrack.percent == 100){%>background-color: var(--button_color); color: #fff; cursor: pointer;<%}%>
     }
 
     .sidebar-button:hover {
         background-color: #898989;
         color: #C7C7C7;
-    <%if(collabTracksCount==0){%>background-color: #898989; color: #C7C7C7;<%}else if(startTrack.percent == 100){%>background-color: var(--button_hover_color); color: #fff;<%}%>
+        <%if(collabTracksCount==0){%>background-color: #898989; color: #C7C7C7;<%}else if(startTrack.percent == 100){%>background-color: var(--button_hover_color); color: #fff;<%}%>
     }
 
     .modal-overlay {
@@ -627,10 +659,10 @@ return sidebarCards;
 
     .tooltip {
         display: none;
-        padding: 10px;
+        padding: 10px; 
         position: absolute;
         background: #000;
-        border-radius: 4px;
+        border-radius: 4px; 
         color: #fff;
         overflow: hidden;
     }
@@ -645,23 +677,23 @@ return sidebarCards;
         }
 
         .container {
-            margin: 20px 10px 20px 50px;
-            flex-direction: column;
-            gap: 14px;
+        margin: 20px 10px 20px 50px;
+        flex-direction: column;
+        gap: 14px;
         }
 
         .main-card-wrapper {
-            width: 330px;
+        width: 330px;
         }
 
         .main-card img {
-            width: 330px;
-            height: 100%;
-            object-fit: cover;
+        width: 330px;
+        height: 100%;
+        object-fit: cover;
         }
 
         .progress-bar {
-            height: 20px;
+        height: 20px;
         }
 
         .percent {
@@ -677,17 +709,17 @@ return sidebarCards;
         }
 
         .card-point img {
-            width: 14px;
-            height: 14px;
+        width: 14px;
+        height: 14px;
         }
 
         .card-header {
-            font-size: 10px;
-            margin-bottom: 14px;
+        font-size: 10px;
+        margin-bottom: 14px;
         }
 
         .card-text {
-            margin-bottom: 4px;
+        margin-bottom: 4px;
         }
 
         .start-button {
@@ -722,7 +754,7 @@ return sidebarCards;
         }
 
         .sidebar-titlebody {
-            gap: 20px;
+            gap: 20px;       
         }
 
         .sidebar-title {
@@ -735,7 +767,7 @@ return sidebarCards;
             height: 10px;
             width: 80px;
             border-radius: 8px;
-            margin-top: 2px;
+            margin-top: 2px;       
         }
 
         .sidebar-percent {
@@ -792,6 +824,7 @@ return sidebarCards;
         document.getElementById('main-container').style.width = window.innerWidth + 'px';
     }
 
+<%if(!isStartPassed()){%>
     $('.sidebar-card').mousemove(function(e){
         var X = e.pageX;
         var Y = e.pageY;
@@ -808,6 +841,7 @@ return sidebarCards;
             display:"none"
         });
     });
+<%}%>
 
     const openBtn = document.getElementById('open');
     const modalOverlay = document.getElementById('modal-overlay');
