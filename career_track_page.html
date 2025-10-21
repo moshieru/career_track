@@ -1,8 +1,6 @@
 <script>
     <%
-    %>console.log(<%=curUserID%>);<%
-
-activeTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND main_or_not = 'true'"));
+    activeTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND main_or_not = 'true'"));
     user_competence_results = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = "+ activeTrack.id +"");
 
     tracks = XQuery("sql: SELECT * FROM career_tracks.tracks");
@@ -10,11 +8,190 @@ activeTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs
     competenceCourses = XQuery("sql: SELECT DISTINCT c.name, t.course_id, t.level_id FROM dbo.competences AS c JOIN career_tracks.courses_from_tracks AS t ON c.id = t.competence_id WHERE c.code = 'kt' AND t.track_id = '" + activeTrack.track_id + "'");
     uniqueCompetencesNames = XQuery("sql: SELECT DISTINCT c.name, MIN(c.id) AS competence_id FROM dbo.competences AS c JOIN career_tracks.courses_from_tracks AS t ON c.id = t.competence_id WHERE c.code = 'kt' AND t.track_id = '" + activeTrack.track_id + "' GROUP BY c.name");
     competencePictures = XQuery("sql: SELECT * FROM career_tracks.competence_pictures")
-        %>console.log(<%=ArrayCount(uniqueCompetencesNames)%>);<%
 
-thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + activeTrack.track_id + "'");
+    thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + activeTrack.track_id + "'");
     collabCompetences = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = '" + activeTrack.id + "'");
-    %>console.log(<%=ArrayCount(thisCompetencesCourses)%>);<%
+
+
+    // берем все курсы текущего сотрудника
+    allPersonsCourses = XQuery("sql: SELECT * FROM career_tracks.all_persons_courses WHERE person_id = "+ curUserID +" ORDER BY state_id DESC");
+
+
+
+    //!!! проверка, был ли трек активирован, если не был, то пересчитываем все проценты и обновляем в таблице
+    //!!! проверка, был ли трек активирован, если не был, то пересчитываем все проценты и обновляем в таблице
+    //!!! проверка, был ли трек активирован, если не был, то пересчитываем все проценты и обновляем в таблице
+
+    // функция по проверке наличия уровня | вернем id уровня и id записи (уровень, который проходит сотрудник), иначе 0
+    function checkLevel(person_track_id, level_id){
+        // узнаем, есть ли начатый уровень у сотрудника - если есть: вернем id записи, иначе 0
+        collab_level_id = 0;
+        collab_level = ArrayOptFirstElem(XQuery("sql: SELECT id FROM career_tracks.collab_levels WHERE level_id = "+ level_id +" AND collabs_tracks_id = "+ person_track_id +""));
+
+        if(collab_level != undefined){collab_level_id = collab_level.id;}
+
+        return collab_level_id;
+    }
+
+    // функция по расчету процента прохождения уровня | вернем процент прохождения уровня (кол-во пройденных / кол-во курсов в уровне)
+    function countLevelPercent(person_id, level_id, persons_courses){
+        // все курсы уровня
+        all_level_courses = XQuery("sql: SELECT course_id FROM career_tracks.courses_from_tracks WHERE level_id = "+ level_id +"");
+
+        courses_quantity = ArrayCount(all_level_courses);
+        courses_passed_quantity = 0;
+
+        // проверяем какие курсы из уровня пройдены, считаем средний процент прохождения (считаем общее кол-во и кол-во пройденных)
+        for(one_level_course in all_level_courses){
+            for(one_person_course in persons_courses){
+                if(one_level_course.course_id == one_person_course.course_id){courses_passed_quantity++;}
+            }
+        }
+
+        return ((Real(courses_passed_quantity) / courses_quantity) * 100);
+    }
+
+    function update_or_create_level(person_level_id, percent){
+        if (person_level_id) { // уровень есть
+            // обновляем процент прохождения уровня в таблице
+            update_person_level = ArraySelectAll(XQuery('sql: UPDATE career_tracks.collab_levels SET "percent" = ' + percent + ' WHERE id = ' + person_level_id + ''));
+        } else { // уровня нет
+            // создаем активный уровень у сотрудника, добавляем процент в таблицу
+            create_person_level = ArraySelectAll(XQuery('sql: INSERT INTO career_tracks.collab_levels (collabs_tracks_id, level_id, "percent") VALUES (' + activeTrack.id + ', ' + person_level_id + ', ' + Int(percent) + ')'));
+        }
+    }
+
+    // функция по проверке наличия компетенции | вернем id компетенции и id записи (компетенция, которую проходит сотрудник), иначе 0
+    function checkCompetence(person_competence_id, level){
+        // узнаем id компетенции, на которой находится наш курс
+        competence = ArrayOptFirstElem(XQuery("sql: SELECT competence_id FROM career_tracks.courses_from_tracks WHERE course_id = "+ course_id +" AND level_id = " + level + ""));
+        // если это компетенция уровня, то выполняем этот запрос
+        if(competence != undefined){
+            collab_competence = ArrayOptFirstElem(XQuery("sql: SELECT id FROM career_tracks.collab_competences WHERE competence_id = "+ one_comp.competence_id +" AND collabs_tracks_id = "+ person_track_id +" AND level_id = "+ level +""));
+        } else{
+            collab_competence = ArrayOptFirstElem(XQuery("sql: SELECT id FROM career_tracks.collab_competences WHERE competence_id = "+ competence.competence_id +" AND collabs_tracks_id = "+ person_track_id +""));
+        }
+
+
+
+        if(collab_competence != undefined){collab_competence_id = collab_competence.id;}
+
+        //alert(collab_competence_id + " это компетенция у сотрудника");
+
+        return [competence.competence_id, collab_competence_id];
+    }
+
+    // функция по расчету процента прохождения компетенции | вернем процент прохождения компетенции (кол-во пройденных / кол-во курсов в компетенции)
+    function countCompetencePercent(person_id, competence_id, level_id, persons_courses){
+        // если это компетенция уровня, то выполняем этот запрос
+        if(level_id != 0){
+            // все курсы компетенции
+            all_competence_courses = XQuery("sql: SELECT course_id FROM career_tracks.courses_from_tracks WHERE level_id = "+ level_id +" AND competence_id = "+ competence_id +"");
+        } else {
+            // все курсы компетенции
+            all_competence_courses = XQuery("sql: SELECT course_id FROM career_tracks.courses_from_tracks WHERE competence_id = "+ competence_id +"");
+        }
+
+        courses_quantity = ArrayCount(all_competence_courses);
+        courses_passed_quantity = 0;
+
+        // проверяем какие курсы из компетенции пройдены, считаем средний процент прохождения (считаем общее кол-во и кол-во пройденных)
+        for(one_competence_course in all_competence_courses){
+            for(one_person_course in persons_courses){
+                if(one_competence_course.course_id == one_person_course.course_id){courses_passed_quantity++;}
+            }
+        }
+
+        return ((Real(courses_passed_quantity) / courses_quantity) * 100);
+    }
+
+    // функция по расчету процента прохождения трека | вернем процент прохождения трека (кол-во пройденных / кол-во курсов в треке)
+    function countTrackPercent(track_id, person_track_id, persons_courses){
+        // все курсы трека
+        all_track_courses = XQuery("sql: SELECT course_id FROM career_tracks.courses_from_tracks WHERE track_id = "+ track_id +"");
+
+        courses_quantity = ArrayCount(all_track_courses);
+        courses_passed_quantity = 0;
+
+        // проверяем какие курсы из трека пройдены, считаем средний процент прохождения (считаем общее кол-во и кол-во пройденных)
+        for(one_track_course in all_track_courses){
+            for(one_person_course in persons_courses){
+                if(one_track_course.course_id == one_person_course.course_id){courses_passed_quantity++;}
+            }
+        }
+
+        return ((Real(courses_passed_quantity) / courses_quantity) * 100);
+    }
+
+    if(!activeTrack.is_activated){
+        // все активные и завершенные курсы сотрудника (уникальные завершенные курсы)
+        all_persons_courses = XQuery("sql: SELECT * FROM career_tracks.all_persons_courses apc WHERE apc.id IN (SELECT MIN(id) FROM career_tracks.all_persons_courses WHERE person_id = " + curUserID + " AND state_id = '4' GROUP BY course_id)");
+
+        if(ArrayCount(activeTrack) > 0){
+            // проверяем трек, если 1, 5, 6 или 7 - проверяем уровень
+            if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_id == 6 || activeTrack.track_id == 7) {
+                // проверяем уровень
+                // берем activeTrack.track_id и узнаем уровень, в котором находится курс, и наличие активного уровня у сотрудника
+                course_person_level1 = checkLevel(activeTrack.id, 1);
+                course_person_level2 = checkLevel(activeTrack.id, 2);
+                course_person_level3 = checkLevel(activeTrack.id, 3);
+
+                // считаем процент прохождения уровня
+                new_percent1 = countLevelPercent(curUserID, course_person_level1, all_persons_courses);
+                new_percent2 = countLevelPercent(curUserID, course_person_level2, all_persons_courses);
+                new_percent3 = countLevelPercent(curUserID, course_person_level3, all_persons_courses);
+
+                up_cr_l1 = update_or_create_level(course_person_level1, new_percent1);
+                up_cr_l2 = update_or_create_level(course_person_level2, new_percent2);
+                up_cr_l3 = update_or_create_level(course_person_level3, new_percent3);
+
+
+                // проверяем, есть ли начатая компетенция, в зависимости от уровня
+                for(one_competence in uniqueCompetencesNames){
+                    course_person_competence = checkCompetence(one_competence.competence_id, 1);
+                    // считаем процент прохождения компетенции
+                    new_percent = countCompetencePercent(curUserID, course_person_competence[0], course_person_level[0], all_persons_courses);
+
+                    if(course_person_competence[1]){ // компетенция есть
+                        // обновляем процент прохождения компетенции в таблице
+                        update_person_competence = ArraySelectAll(XQuery('sql: UPDATE career_tracks.collab_competences SET "percent" = ' + new_percent + ' WHERE id = ' + course_person_competence[1] + ''));
+
+                    } else {// компетенции нет
+                        create_person_competence = ArraySelectAll(XQuery('sql: INSERT INTO career_tracks.collab_competences (competence_id, collabs_tracks_id, level_id, "percent") VALUES ('+ course_person_competence[0] +', ' + activeTrack.id + ', ' + course_person_level[0] + ', ' + Int(new_percent) + ')'));
+                    }
+                }
+
+
+
+
+            }
+            else{
+                // проверяем, есть ли начатая компетенция по треку, если нет уровней в треке
+                course_person_competence = checkCompetence(activeTrack.id, activeLearningDoc.course_id, 0);
+                // считаем процент прохождения компетенции
+                new_percent = countCompetencePercent(curUserID, course_person_competence[0], 0, all_persons_courses);
+
+                if(course_person_competence[1]){ // компетенция есть
+                    // обновляем процент прохождения компетенции в таблице
+                    update_person_competence = ArraySelectAll(XQuery('sql: UPDATE career_tracks.collab_competences SET "percent" = ' + new_percent + ' WHERE id = ' + course_person_competence[1] + ''));
+
+                } else {// компетенции нет
+                    create_person_level = ArraySelectAll(XQuery('sql: INSERT INTO career_tracks.collab_competences (competence_id, collabs_tracks_id, "percent") VALUES ('+ course_person_competence[0] +', ' + activeTrack.id + ', ' + Int(new_percent) + ')'));
+                }
+            }
+
+            // пересчет процента прохождения трека
+            // считаем процент прохождения трека
+            new_percent = countTrackPercent(activeTrack.track_id, activeTrack.id, all_persons_courses);
+            // обновляем процент прохождения трека в таблице
+            update_person_competence = ArraySelectAll(XQuery('sql: UPDATE career_tracks.collabs_tracks SET "percent" = ' + new_percent + ' WHERE id = ' + activeTrack.id + ''));
+        }
+    }
+
+
+
+
+
 
     // проверка на трек: старт или обычный
     // если старт, то берем компетенции и курсы из разных уровней
@@ -27,9 +204,6 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
     }else{
         levelCompetences = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE track_id = '"+ activeTrack.track_id +"'");
     }
-
-
-
 
 
     function drawHead()
@@ -66,12 +240,21 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
 
         if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_id == 6 || activeTrack.track_id == 7){
             tabs += '<div class="tabs">
-                <div class="tab active" data-id="section1">0-3 месяца</div>
-            <div class="tab" data-id="section2">4-6 месяцев</div>
-            <div class="tab" data-id="section3">Итоговый тест</div>
-        </div>'
+                <div class="tab-point">
+                <div class="tab active" data-section="section1" data-module="module1">0-3 месяца</div>
+            <img src="http://education-test.etagi.com/download_file.html?file_id=7563155087986396789">
+            </div>
+            <div class="tab-point">
+                <div class="tab" data-section="section2" data-module="module2">4-6 месяцев</div>
+                <img src="http://education-test.etagi.com/download_file.html?file_id=7563155087986396789">
+            </div>
+            <div class="tab-point">
+                <div class="tab" data-section="section3" data-module="module3">Итоговый тест</div>
+                <img src="http://education-test.etagi.com/download_file.html?file_id=7563155087986396789"/>
+            </div>
+        </div>
+            '
         }
-
         return tabs;
     }
 
@@ -79,7 +262,7 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
     function drawModules(level){
         modules = "";
 
-        if(level == 'level'){
+        if (level == 'level'){
             levelCompetencesForModule = levelCompetences;
         } else{
             if(level == 'level1'){
@@ -106,7 +289,7 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
             competenceObj = OpenDoc(UrlFromDocID(Int(c.competence_id)));
 
 
-            modules += '<div class="module" onclick="document.querySelector(`[data-id='+ competence_id +']`).scrollIntoView({behavior: `smooth`, block: `start`})">
+            modules += '<div class="module" onclick="[...document.querySelectorAll(`[data-section=' + competence_id + ']`)].find(el => el.offsetParent !== null)?.scrollIntoView({ behavior:`smooth`, block:`start`})">
                 <img src="http://education-test.etagi.com/download_file.html?file_id='+ competenceObj.TopElem.resource_id +'">
                 <div class="module-content">
                 <div class="module-title">'+ competenceObj.TopElem.name +'</div>
@@ -123,14 +306,18 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
     {
         coursesBlock = "";
         i = 0;
+        levelOfCourse = 0;
 
         if(level == 'level'){
             levelCompetencesForModule = levelCompetences;
+            levelOfCourse = null;
         } else{
             if(level == 'level1'){
                 levelCompetencesForModule = firstLevelCompetences;
+                levelOfCourse = 1;
             } else if(level == 'level2') {
                 levelCompetencesForModule = secondLevelCompetences;
+                levelOfCourse = 2;
             } else{
 
                 return coursesBlock;
@@ -150,7 +337,7 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
             // открываем объект компетенции для того, чтобы взять название и картинку
             competenceObj = OpenDoc(UrlFromDocID(Int(competence.competence_id)));
 
-            coursesBlock += '<div class="section" data-id='+ competence.competence_id +'>
+            coursesBlock += '<div class="section" data-section='+ competence.competence_id +'>
                 <div class="section-bar">
                 <div class="section-title">'+ competenceObj.TopElem.name +'</div>
         </div>
@@ -160,15 +347,26 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
             </div>
             <div class="course-cards">';
                 for(courses in competenceCourses){
-                    if(courses.name == competenceObj.TopElem.name){
+                    if(courses.name == competenceObj.TopElem.name && courses.level_id == levelOfCourse){
                     courseObj = OpenDoc(UrlFromDocID(Int(courses.course_id)));
+
+                    percent = 0;
+                    isCompleted = false;
+                    // проходимся по массиву всех курсов пользователя (активных и завершенных) для отображения результата прохождения
+                    for(allCourses in allPersonsCourses){
+                    if(courseObj.TopElem.id == allCourses.course_id){
+                    percent = allCourses.percent;
+                    if(allCourses.state_id == '4'){isCompleted = true;}
+                    break;
+                }
+                }
                     coursesBlock += '
-                    <div class="course-card">
+                    <div class="course-card" onclick="window.open(`http://education.etagi.com/_wt/'+ courseObj.TopElem.id +'`, `_blank`)">
                     <img class="course-img" src="http://education.etagi.com/download_file.html?file_id='+ courseObj.TopElem.resource_id +'">
                     <h3>'+ courseObj.TopElem.name +'</h3>
                     <div class="course-card-progressbar">
-                    <div class="course-card-progress"></div>
-                    <div class="course-card-percent">0%</div>
+                    <div class="course-card-progress" style="width: '+ percent +'%"></div>
+                    <div class="course-card-percent">'+ percent +'%</div>
                     </div>
                     </div>';
                 }
@@ -179,48 +377,11 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
         return coursesBlock;
     }
 
-
-    // function drawCourses()
-    // {
-    //     coursesBlock = "";
-    //     i = 0;
-    //
-    //     for(competence in uniqueCompetencesNames){
-    //         competence_result = 0;
-    //         for(comp_res in user_competence_results){
-    //             if(comp_res.competence_id == competence.competence_id){
-    //                 competence_result = comp_res.percent;
-    //                 break;
-    //             }
-    //         }
-    //         coursesBlock += '<div class="section" data-id='+ competence.competence_id +'>
-    //                             <div class="section-bar">
-    //                                 <div class="section-title">'+ competence.name +'</div>
-    //                             </div>
-    //                             <div class="section-progressbar">
-    //                                 <div class="section-progress" style="width: ' + competence_result + '%;"></div>
-    //                                 <div class="section-percent">'+ competence_result +'%</div>
-    //                             </div>
-    //                         <div class="course-cards">';
-    //         for(courses in competenceCourses){
-    //             if(courses.name == competence.name){
-    //                 courseObj = OpenDoc(UrlFromDocID(Int(courses.course_id)));
-    //                 coursesBlock += '
-    //                             <div class="course-card">
-    //                                 <img src="http://education.etagi.com/download_file.html?file_id='+ courseObj.TopElem.resource_id +'">
-    //                                 <h3>'+ courseObj.TopElem.name +'</h3>
-    //                                 <div class="course-card-progressbar">
-    //                                     <div class="course-card-progress"></div>
-    //                                     <div class="course-card-percent">0%</div>
-    //                                 </div>
-    //                             </div>';
-    //             }
-    //         }
-    //         i++;
-    //         coursesBlock += '</div></div>';
-    //     }
-    //     return coursesBlock;
-    // }
+    function drawTest() {
+        test = "";
+        test += '<div class="test-container">Тут тест<button>Начать тест</button></div>';
+        return test;
+    }
 
     function createTab(level){
         tab += '<div class=""+level+"">';
@@ -236,7 +397,23 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
         tab1 = '';
         tab2 = '';
         tab3 = '';
-
+        // начинаем верстку
+        allCode = '<div class="modules-container">
+            <button id="scroll-prev"><img class="button-img" src="http://education-test.etagi.com/download_file.html?file_id=7558751212548830488"></button>
+        <div class="modules module1 scroll-container">'
+            + drawModules("level1") +
+            '</div>
+        <div class="modules module2 scroll-container" style="display: none">'
+            + drawModules("level2") +
+            '</div>
+        <button id="scroll-next"><img class="button-img" src="http://education-test.etagi.com/download_file.html?file_id=7558756114306075470"></button>
+    </div>
+        <div class="sections section1">'
+            + drawCourses("level1") +
+            '</div>
+        <div class="sections section2" style="display: none">'
+            + drawCourses("level2") +
+            '</div>';
         // tab1 += '<div class="level1">';
         // tab1 += drawModules();
         // tab1 += drawCourses();
@@ -247,16 +424,19 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
 
 
     } else{
-        tab1 = '';
-
-        // tab1 += createTab(level);
+        // начинаем верстку
+        allCode = '<div class="modules-container">
+            <button id="scroll-prev"><img class="button-img" src="http://education-test.etagi.com/download_file.html?file_id=7558751212548830488"></button>
+        <div class="modules module1 scroll-container">'
+            + drawModules("level") +
+            '</div>
+        <button id="scroll-next"><img class="button-img" src="http://education-test.etagi.com/download_file.html?file_id=7558756114306075470"></button>
+    </div>
+        <div class="sections section1">'
+            + drawCourses("level") +
+            '</div>';
     }
-
-
-
     %>
-
-    let coursesBlockJS = `<%=drawCourses()%>`;
 </script>
 <style>
 
@@ -290,7 +470,8 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
         flex-direction: column;
         justify-content: center;
         text-align: left;
-        padding: 60px 100px;
+        /*padding: 60px 100px;*/
+        padding: 3% 10%;
         color: var(--text_header_color);
         position: relative;
     }
@@ -359,6 +540,18 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
         cursor: pointer;
         font-size: 2rem;
         position: relative;
+    }
+
+    .tab-point {
+        display: flex;
+        flex-direction: row;
+        gap: 5px;
+    }
+
+    .tab-point img {
+        height: 15px;
+        width: 15px;
+        display: none;
     }
 
     .tab.active {
@@ -474,7 +667,7 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
         font-size: 3rem;
         font-weight: 500;
         color: #F6F6F6;
-        padding: 10px 0 0 15px;
+        padding: 10px 15px;
     }
 
     .section-progressbar {
@@ -487,7 +680,7 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
 
     .section-progress {
         height: 100%;
-        background-color: var(--page_secondary_color);
+        background-color: var(--track_progress_color);
         width: 0;
         position: absolute;
         z-index: 1;
@@ -513,12 +706,14 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
         flex-direction: column;
         position: relative;
         height: 320px;
-        width: 15.5%;
+        width: 15.4%;
         border-radius: 10px;
         background-color: white;
         cursor: pointer;
         align-items: center;
-        transition: 0.3s
+        transition: 0.3s;
+        border: 0.5px solid #c7c7c773;
+        box-shadow: 0 4px 8px rgba(231, 231, 231, 0.1);
     }
 
     .course-card:hover {
@@ -562,8 +757,8 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
     .course-card-percent {
         font-size: 1.5rem;
         text-align: center;
-        left: 50%;
         position: absolute;
+        width: 100%;
         z-index: 2;
         color: var(--text_secondary_color);
     }
@@ -683,7 +878,7 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
 
         .section-title {
             font-size: 2rem;
-            padding: 5% 0 0 2%;
+            padding: 2% 0 2% 2%;
         }
 
         .section-progressbar {
@@ -748,25 +943,8 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
             <%=drawProgress()%>
             <%=drawTabs()%>
 
-            <div class="modules-container">
-                <button id="scroll-prev"><img class="button-img" src="http://education-test.etagi.com/download_file.html?file_id=7558751212548830488"></button>
-                <div class="modules module1 scroll-container">
-                    <%=drawModules('level')%>
-                </div>
-                <div class="modules module2 scroll-container" style="display: none">
-                    <%=drawModules('level')%>
-                </div>
-                <button id="scroll-next"><img class="button-img" src="http://education-test.etagi.com/download_file.html?file_id=7558756114306075470"></button>
-            </div>
-
-            <div class="sections section1">
-                <%=drawCourses('level')%>
-            </div>
-            <div class="sections section2" style="display: none">
-                <%=drawCourses('level')%>
-            </div>
+            <%=allCode%>
         </div>
-
     </div>
 </div>
 
@@ -781,25 +959,41 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
         mainContainer.style.width = window.innerWidth + 'px';
     }
 
+
+    modules = document.querySelector('.modules');
+    scrollNext = document.getElementById('scroll-next');
+    scrollPrev = document.getElementById('scroll-prev');
+    widthPercent = (modules.width / mainContainer.width) * 100;
+    console.log(widthPercent);
+
+    if(widthPercent >= 60)
+    {
+        scrollNext.style.display = 'none';
+        scrollPrev.style.display = 'none';
+    }
+
+
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             document.querySelectorAll('.sections').forEach(t => t.style.display = 'none');
-            document.querySelector('.' + tab.getAttribute("data-id")).style.display = "flex";
+            document.querySelectorAll('.modules').forEach(t => t.style.display = 'none');
+            document.querySelector('.' + tab.getAttribute("data-section")).style.display = "flex";
+            document.querySelector('.' + tab.getAttribute("data-module")).style.display = "flex";
         });
     });
 
     const container = document.querySelectorAll('.scroll-container');
 
-    document.getElementById('scroll-next').addEventListener('click', () => {
+    scrollNext.addEventListener('click', () => {
         container.forEach(t => t.scrollBy({
             left: 600,
             behavior: "smooth",
         }));
     });
 
-    document.getElementById('scroll-prev').addEventListener('click', () => {
+    scrollNext.addEventListener('click', () => {
         container.forEach(t => t.scrollBy({
             left: -600,
             behavior: "smooth",
