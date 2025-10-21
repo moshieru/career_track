@@ -1,5 +1,6 @@
 <script>
     <%
+
     activeTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND main_or_not = 'true'"));
     user_competence_results = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = "+ activeTrack.id +"");
 
@@ -15,8 +16,6 @@
 
     // берем все курсы текущего сотрудника
     allPersonsCourses = XQuery("sql: SELECT * FROM career_tracks.all_persons_courses WHERE person_id = "+ curUserID +" ORDER BY state_id DESC");
-
-
 
     //!!! проверка, был ли трек активирован, если не был, то пересчитываем все проценты и обновляем в таблице
     //!!! проверка, был ли трек активирован, если не был, то пересчитываем все проценты и обновляем в таблице
@@ -188,11 +187,6 @@
         }
     }
 
-
-
-
-
-
     // проверка на трек: старт или обычный
     // если старт, то берем компетенции и курсы из разных уровней
     // иначе берем все остальные компетенции из трека
@@ -247,14 +241,20 @@
             <div class="tab-point">
                 <div class="tab" data-section="section2" data-module="module2">4-6 месяцев</div>
                 <img src="http://education-test.etagi.com/download_file.html?file_id=7563155087986396789">
-            </div>
-            <div class="tab-point">
-                <div class="tab" data-section="section3" data-module="module3">Итоговый тест</div>
+            </div>'
+
+            isExpierenced = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND is_expierenced = 'true'"));
+
+            if(isExpierenced){
+            tabs += '<div class="tab-point">
+                <div class="tab" data-section="section3" data-module="module3" id="tab-test">Итоговый тест</div>
                 <img src="http://education-test.etagi.com/download_file.html?file_id=7563155087986396789"/>
-            </div>
-        </div>
-            '
+            </div>';
+            }
+            
+            tabs += '</div>';
         }
+
         return tabs;
     }
 
@@ -379,7 +379,13 @@
 
     function drawTest() {
         test = "";
-        test += '<div class="test-container">Тут тест<button>Начать тест</button></div>';
+        test += '<div class="test-container">
+                    <h1 class="test-header">Итоговый тест по треку «Старт в недвижимости»</h1>
+                    <div id="test-desc"><b>Количество попыток:</b> 2<br><b>Продолжительность:</b> 30 минут<br><br>Пройдите тест, чтобы завершить трек! Если не получится — ничего страшного, пройдите все курсы трека и он завершится автоматически.</div>
+                    <div class="test-button-container">
+                        <button id="test-button" onclick="window.open(`http://education.etagi.com/_wt/7560603229131710427`)">Начать тест</button>
+                    </div>
+                </div>';
         return test;
     }
 
@@ -406,13 +412,18 @@
         <div class="modules module2 scroll-container" style="display: none">'
             + drawModules("level2") +
             '</div>
+        <div class="modules module3 scroll-container" style="display: none">
+            </div>;
         <button id="scroll-next"><img class="button-img" src="http://education-test.etagi.com/download_file.html?file_id=7558756114306075470"></button>
-    </div>
+            </div>
         <div class="sections section1">'
             + drawCourses("level1") +
             '</div>
         <div class="sections section2" style="display: none">'
             + drawCourses("level2") +
+            '</div>
+        <div class="sections section3" style="display: none">'
+            + drawTest() +
             '</div>';
         // tab1 += '<div class="level1">';
         // tab1 += drawModules();
@@ -448,6 +459,40 @@
         --track_progress_color: #B9D2B8;
         --page_secondary_color: #AAB0C8;
         --page_main_color: #545F92;
+    }
+
+    .test-container {
+        display: flex;
+        flex-direction: column;
+        background-color: #fff;
+        margin: 2%;
+        border-radius: 12px;
+        padding: 1%;
+        width: 40%;
+    }
+
+    #test-desc {
+        font-size: 2rem;
+        line-height: 30px;
+        margin-bottom: 20px;
+    }
+
+    #test-button {
+        background-color: #2C3979;
+        color: #fff;
+        border: none;
+        padding: 10px;
+        border-radius: 12px;
+        font-size: 2rem;
+        font-weight: bold;
+        cursor: pointer;
+        text-align: center;
+        width: 20%;
+    }
+
+    .test-button-container {
+        display: flex;
+        justify-content: center;
     }
 
     #main-container {
@@ -959,19 +1004,8 @@
         mainContainer.style.width = window.innerWidth + 'px';
     }
 
-
-    modules = document.querySelector('.modules');
     scrollNext = document.getElementById('scroll-next');
     scrollPrev = document.getElementById('scroll-prev');
-    widthPercent = (modules.width / mainContainer.width) * 100;
-    console.log(widthPercent);
-
-    if(widthPercent >= 60)
-    {
-        scrollNext.style.display = 'none';
-        scrollPrev.style.display = 'none';
-    }
-
 
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
@@ -981,6 +1015,12 @@
             document.querySelectorAll('.modules').forEach(t => t.style.display = 'none');
             document.querySelector('.' + tab.getAttribute("data-section")).style.display = "flex";
             document.querySelector('.' + tab.getAttribute("data-module")).style.display = "flex";
+
+            if(tab.id == "tab-test" && tab.classList.contains('active')) {
+                document.querySelector('.modules-container').style.display = 'none';
+            }else{
+                document.querySelector('.modules-container').style.display = 'flex';
+            }
         });
     });
 
