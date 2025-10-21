@@ -3,7 +3,6 @@
 
     activeTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND main_or_not = 'true'"));
     user_competence_results = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = "+ activeTrack.id +"");
-    isExpierenced = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND is_expierenced = 'true'"));
 
     tracks = XQuery("sql: SELECT * FROM career_tracks.tracks");
 
@@ -243,16 +242,19 @@
                 <div class="tab" data-section="section2" data-module="module2">4-6 месяцев</div>
                 <img src="http://education-test.etagi.com/download_file.html?file_id=7563155087986396789">
             </div>'
-        }
 
-        if(isExpierenced){
+            isExpierenced = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND is_expierenced = 'true'"));
+
+            if(isExpierenced){
             tabs += '<div class="tab-point">
                 <div class="tab" data-section="section3" data-module="module3" id="tab-test">Итоговый тест</div>
                 <img src="http://education-test.etagi.com/download_file.html?file_id=7563155087986396789"/>
             </div>';
+            }
+            
+            tabs += '</div>';
         }
 
-        tabs += '</div>';
         return tabs;
     }
 

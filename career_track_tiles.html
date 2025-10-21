@@ -1,4 +1,7 @@
 <%
+
+    // Я ХОЧУ СПАТЬ И КУШАТЬ А НЕ ВОТ ЭТО ВОТ ВСЁ
+    
     collabTracks = XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "'");
     collabTracksCount = ArrayCount(collabTracks);
 
@@ -795,17 +798,17 @@
     <div id="modal-overlay" class="modal-overlay">
         <div class="modal">
             <button class="close-btn" id="close-btn">×</button>
-            <h2 class="modal-title">Укажите свой опыт в нашей компании</h2>
+            <h2 class="modal-title">Укажите свой опыт<br>в компании «Этажи»</h2>
             <div class="modal-content">
                 <div class="option-card">
                     <img src="https://i.ibb.co/MkKp4N7M/Group-87.png" alt="Новичок" class="option-image">
                     <p class="option-text">Стаж: 0-6 месяцев</p>
-                    <button class="option-btn" onclick="window.open('http://education-test.etagi.com/_wt/career_track', _self)">Я новичок!</button>
+                    <button class="option-btn" onclick="window.open('http://education-test.etagi.com/_wt/career_track', _self)">Я новичок в Этажах</button>
                 </div>
                 <div class="option-card">
                     <img src="https://i.ibb.co/HLvDNpcs/Group-89.png" alt="Опытный" class="option-image">
                     <p class="option-text">Стаж: 6+ месяцев</p>
-                    <button class="option-btn" id="skilled_btn">Я опытный!</button>
+                    <button class="option-btn" id="skilled_btn" onclick="window.open('http://education-test.etagi.com/_wt/career_track', _self)">Я опытный в Этажах</button>
                 </div>
             </div>
         </div>
