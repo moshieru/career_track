@@ -1,6 +1,5 @@
 <script>
     <%
-
     activeTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND main_or_not = 'true'"));
     user_competence_results = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = "+ activeTrack.id +"");
 
@@ -16,6 +15,183 @@
 
     // берем все курсы текущего сотрудника
     allPersonsCourses = XQuery("sql: SELECT * FROM career_tracks.all_persons_courses WHERE person_id = "+ curUserID +" ORDER BY state_id DESC");
+
+
+
+    //!!! проверка, был ли трек активирован, если не был, то пересчитываем все проценты и обновляем в таблице
+    //!!! проверка, был ли трек активирован, если не был, то пересчитываем все проценты и обновляем в таблице
+    //!!! проверка, был ли трек активирован, если не был, то пересчитываем все проценты и обновляем в таблице
+
+    // функция по проверке наличия уровня | вернем id уровня и id записи (уровень, который проходит сотрудник), иначе 0
+    function checkLevel(person_track_id, level_id){
+        // узнаем, есть ли начатый уровень у сотрудника - если есть: вернем id записи, иначе 0
+        collab_level_id = 0;
+        collab_level = ArrayOptFirstElem(XQuery("sql: SELECT id FROM career_tracks.collab_levels WHERE level_id = "+ level_id +" AND collabs_tracks_id = "+ person_track_id +""));
+
+        if(collab_level != undefined){collab_level_id = collab_level.id;}
+
+        return collab_level_id;
+    }
+
+    // функция по расчету процента прохождения уровня | вернем процент прохождения уровня (кол-во пройденных / кол-во курсов в уровне)
+    function countLevelPercent(person_id, level_id, persons_courses){
+        // все курсы уровня
+        all_level_courses = XQuery("sql: SELECT course_id FROM career_tracks.courses_from_tracks WHERE level_id = "+ level_id +"");
+
+        courses_quantity = ArrayCount(all_level_courses);
+        courses_passed_quantity = 0;
+
+        // проверяем какие курсы из уровня пройдены, считаем средний процент прохождения (считаем общее кол-во и кол-во пройденных)
+        for(one_level_course in all_level_courses){
+            for(one_person_course in persons_courses){
+                if(one_level_course.course_id == one_person_course.course_id){courses_passed_quantity++;}
+            }
+        }
+
+        return ((Real(courses_passed_quantity) / courses_quantity) * 100);
+    }
+
+    function update_or_create_level(person_level_id, percent){
+        if (person_level_id) { // уровень есть
+            // обновляем процент прохождения уровня в таблице
+            update_person_level = ArraySelectAll(XQuery('sql: UPDATE career_tracks.collab_levels SET "percent" = ' + percent + ' WHERE id = ' + person_level_id + ''));
+        } else { // уровня нет
+            // создаем активный уровень у сотрудника, добавляем процент в таблицу
+            create_person_level = ArraySelectAll(XQuery('sql: INSERT INTO career_tracks.collab_levels (collabs_tracks_id, level_id, "percent") VALUES (' + activeTrack.id + ', ' + person_level_id + ', ' + Int(percent) + ')'));
+        }
+    }
+
+    // функция по проверке наличия компетенции | вернем id компетенции и id записи (компетенция, которую проходит сотрудник), иначе 0
+    function checkCompetence(person_competence_id, level){
+        // узнаем id компетенции, на которой находится наш курс
+        competence = ArrayOptFirstElem(XQuery("sql: SELECT competence_id FROM career_tracks.courses_from_tracks WHERE course_id = "+ course_id +" AND level_id = " + level + ""));
+        // если это компетенция уровня, то выполняем этот запрос
+        if(competence != undefined){
+            collab_competence = ArrayOptFirstElem(XQuery("sql: SELECT id FROM career_tracks.collab_competences WHERE competence_id = "+ one_comp.competence_id +" AND collabs_tracks_id = "+ person_track_id +" AND level_id = "+ level +""));
+        } else{
+            collab_competence = ArrayOptFirstElem(XQuery("sql: SELECT id FROM career_tracks.collab_competences WHERE competence_id = "+ competence.competence_id +" AND collabs_tracks_id = "+ person_track_id +""));
+        }
+
+
+
+        if(collab_competence != undefined){collab_competence_id = collab_competence.id;}
+
+        //alert(collab_competence_id + " это компетенция у сотрудника");
+
+        return [competence.competence_id, collab_competence_id];
+    }
+
+    // функция по расчету процента прохождения компетенции | вернем процент прохождения компетенции (кол-во пройденных / кол-во курсов в компетенции)
+    function countCompetencePercent(person_id, competence_id, level_id, persons_courses){
+        // если это компетенция уровня, то выполняем этот запрос
+        if(level_id != 0){
+            // все курсы компетенции
+            all_competence_courses = XQuery("sql: SELECT course_id FROM career_tracks.courses_from_tracks WHERE level_id = "+ level_id +" AND competence_id = "+ competence_id +"");
+        } else {
+            // все курсы компетенции
+            all_competence_courses = XQuery("sql: SELECT course_id FROM career_tracks.courses_from_tracks WHERE competence_id = "+ competence_id +"");
+        }
+
+        courses_quantity = ArrayCount(all_competence_courses);
+        courses_passed_quantity = 0;
+
+        // проверяем какие курсы из компетенции пройдены, считаем средний процент прохождения (считаем общее кол-во и кол-во пройденных)
+        for(one_competence_course in all_competence_courses){
+            for(one_person_course in persons_courses){
+                if(one_competence_course.course_id == one_person_course.course_id){courses_passed_quantity++;}
+            }
+        }
+
+        return ((Real(courses_passed_quantity) / courses_quantity) * 100);
+    }
+
+    // функция по расчету процента прохождения трека | вернем процент прохождения трека (кол-во пройденных / кол-во курсов в треке)
+    function countTrackPercent(track_id, person_track_id, persons_courses){
+        // все курсы трека
+        all_track_courses = XQuery("sql: SELECT course_id FROM career_tracks.courses_from_tracks WHERE track_id = "+ track_id +"");
+
+        courses_quantity = ArrayCount(all_track_courses);
+        courses_passed_quantity = 0;
+
+        // проверяем какие курсы из трека пройдены, считаем средний процент прохождения (считаем общее кол-во и кол-во пройденных)
+        for(one_track_course in all_track_courses){
+            for(one_person_course in persons_courses){
+                if(one_track_course.course_id == one_person_course.course_id){courses_passed_quantity++;}
+            }
+        }
+
+        return ((Real(courses_passed_quantity) / courses_quantity) * 100);
+    }
+
+    if(!activeTrack.is_activated){
+        // все активные и завершенные курсы сотрудника (уникальные завершенные курсы)
+        all_persons_courses = XQuery("sql: SELECT * FROM career_tracks.all_persons_courses apc WHERE apc.id IN (SELECT MIN(id) FROM career_tracks.all_persons_courses WHERE person_id = " + curUserID + " AND state_id = '4' GROUP BY course_id)");
+
+        if(ArrayCount(activeTrack) > 0){
+            // проверяем трек, если 1, 5, 6 или 7 - проверяем уровень
+            if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_id == 6 || activeTrack.track_id == 7) {
+                // проверяем уровень
+                // берем activeTrack.track_id и узнаем уровень, в котором находится курс, и наличие активного уровня у сотрудника
+                course_person_level1 = checkLevel(activeTrack.id, 1);
+                course_person_level2 = checkLevel(activeTrack.id, 2);
+                course_person_level3 = checkLevel(activeTrack.id, 3);
+
+                // считаем процент прохождения уровня
+                new_percent1 = countLevelPercent(curUserID, course_person_level1, all_persons_courses);
+                new_percent2 = countLevelPercent(curUserID, course_person_level2, all_persons_courses);
+                new_percent3 = countLevelPercent(curUserID, course_person_level3, all_persons_courses);
+
+                up_cr_l1 = update_or_create_level(course_person_level1, new_percent1);
+                up_cr_l2 = update_or_create_level(course_person_level2, new_percent2);
+                up_cr_l3 = update_or_create_level(course_person_level3, new_percent3);
+
+
+                // проверяем, есть ли начатая компетенция, в зависимости от уровня
+                for(one_competence in uniqueCompetencesNames){
+                    course_person_competence = checkCompetence(one_competence.competence_id, 1);
+                    // считаем процент прохождения компетенции
+                    new_percent = countCompetencePercent(curUserID, course_person_competence[0], course_person_level[0], all_persons_courses);
+
+                    if(course_person_competence[1]){ // компетенция есть
+                        // обновляем процент прохождения компетенции в таблице
+                        update_person_competence = ArraySelectAll(XQuery('sql: UPDATE career_tracks.collab_competences SET "percent" = ' + new_percent + ' WHERE id = ' + course_person_competence[1] + ''));
+
+                    } else {// компетенции нет
+                        create_person_competence = ArraySelectAll(XQuery('sql: INSERT INTO career_tracks.collab_competences (competence_id, collabs_tracks_id, level_id, "percent") VALUES ('+ course_person_competence[0] +', ' + activeTrack.id + ', ' + course_person_level[0] + ', ' + Int(new_percent) + ')'));
+                    }
+                }
+
+
+
+
+            }
+            else{
+                // проверяем, есть ли начатая компетенция по треку, если нет уровней в треке
+                course_person_competence = checkCompetence(activeTrack.id, activeLearningDoc.course_id, 0);
+                // считаем процент прохождения компетенции
+                new_percent = countCompetencePercent(curUserID, course_person_competence[0], 0, all_persons_courses);
+
+                if(course_person_competence[1]){ // компетенция есть
+                    // обновляем процент прохождения компетенции в таблице
+                    update_person_competence = ArraySelectAll(XQuery('sql: UPDATE career_tracks.collab_competences SET "percent" = ' + new_percent + ' WHERE id = ' + course_person_competence[1] + ''));
+
+                } else {// компетенции нет
+                    create_person_level = ArraySelectAll(XQuery('sql: INSERT INTO career_tracks.collab_competences (competence_id, collabs_tracks_id, "percent") VALUES ('+ course_person_competence[0] +', ' + activeTrack.id + ', ' + Int(new_percent) + ')'));
+                }
+            }
+
+            // пересчет процента прохождения трека
+            // считаем процент прохождения трека
+            new_percent = countTrackPercent(activeTrack.track_id, activeTrack.id, all_persons_courses);
+            // обновляем процент прохождения трека в таблице
+            update_person_competence = ArraySelectAll(XQuery('sql: UPDATE career_tracks.collabs_tracks SET "percent" = ' + new_percent + ' WHERE id = ' + activeTrack.id + ''));
+        }
+    }
+
+
+
+
+
 
     // проверка на трек: старт или обычный
     // если старт, то берем компетенции и курсы из разных уровней
