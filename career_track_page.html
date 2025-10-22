@@ -363,7 +363,7 @@
             <h1 class="test-header">Итоговый тест по треку «Старт в недвижимости»</h1>
         <div id="test-desc"><b>Количество попыток:</b> 2<br><b>Продолжительность:</b> 30 минут<br><br>Пройдите тест, чтобы завершить трек! Если не получится — ничего страшного, пройдите все курсы трека и он завершится автоматически.</div>
         <div class="test-button-container">
-            <button id="test-button">Начать тест</button>
+            <button id="test-button" onclick="window.open(`/_wt/7560603229131710427`, `_blank`)">Начать тест</button>
         </div>
     </div>';
     return test;
@@ -471,7 +471,8 @@
     }
 
     .test-button-container {
-        align-items: center;
+        display: flex;
+        justify-content: center;
     }
 
     #main-container {
