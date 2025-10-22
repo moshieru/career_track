@@ -7,6 +7,17 @@ tracks = XQuery("sql: SELECT * FROM career_tracks.tracks");
 startTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND track_id = 1"));
 descriptions = ["Вы освоите все тонкости сделок: от юридических аспектов до техник продаж и маркетинга. Вы узнаете, как строить базу клиентов, вести переговоры и успешно закрывать сделки.", "Вы хотите быть успешным риелтором и при этом уделять достаточно времени семье? Этот карьерный трек покажет, как эффективно управлять своим временем и ресурсами.", "Вы уже добились успеха в сфере недвижимости, но чувствуете, что пора двигаться дальше? Этот трек создан для тех, кто готов выйти на новый уровень и освоить передовые стратегии рынка.", "Готовы переосмыслить свой потенциал и достичь новых вершин? Этот трек — ваш ключ к будущему в недвижимости. Обучайтесь сегодня, чтобы не просто работать на рынке, а определять его правила!"];
 
+
+activeTrackId = 0;
+if(active_track != undefined){
+activeTrackId = active_track.track_id;
+}
+
+startTrackPercent = 0;
+if(startTrack != undefined){
+startTrackPercent = startTrack.percent;
+}
+
 function courseCount(track_id, mode)
 {
 courseAmount = "";
@@ -16,7 +27,7 @@ if(track_id == 1 || track_id == 5 || track_id == 6 || track_id == 7)
 count1 = ArrayCount(XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + track_id + "' AND level_id = 1"));
 count2 = ArrayCount(XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + track_id + "' AND level_id = 2"));
 
-if(track_id == active_track.track_id)
+if(track_id == activeTrackId)
 {
 courseAmount += '<div class="card-point" id="start-track">
     <img src="https://i.ibb.co/9HTD4qpB/image.png" alt="a">
@@ -74,40 +85,40 @@ return ('<img src="/download_file.html?file_id=' + picture.big_image + '">');
 
 function defineButtonText(track_id)
 {
-    buttonText = "";
-    trackPercent = null;
-    isActive = false;
+buttonText = "";
+trackPercent = null;
+isActive = false;
 
-    trackPercents = XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND track_id = '" + track_id + "'");
-    for(track in trackPercents){
-        trackPercent = track.percent;
-        if(track.track_id == active_track.track_id){ isActive = true; }
-    }
+trackPercents = XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND track_id = '" + track_id + "'");
+for(track in trackPercents){
+trackPercent = track.percent;
+if(track.track_id == activeTrackId){ isActive = true; }
+}
 
-    if(isActive) {
-        if(trackPercent == 100){
-            buttonText += '<button class="start-button" onclick="setMainTrack('+track_id+'); window.open(`/career_track_rieltor`, `_self`)">Просмотреть трек</button>';
-        }
-        else{
-            buttonText += '<button class="start-button" onclick="setMainTrack('+track_id+'); window.open(`/career_track_rieltor`, `_self`)"> Продолжить</button>';
-        }
-    }
-    else {
-        if(trackPercent == 0 || (trackPercent > 0 && trackPercent < 100)){
-            buttonText += '<button class="sidebar-button" onclick="setMainTrack('+track_id+'); window.open(`/career_track_rieltor`, `_self`)">Продолжить</button>';
-        }
-        else if(trackPercent == 100){
-            buttonText += '<button class="sidebar-button" onclick="setMainTrack('+track_id+'); window.open(`/career_track_rieltor`, `_self`)">Просмотреть трек</button>';
-        }
-        else if(startTrack.percent < 100){
-            buttonText += '<button class="sidebar-button">Начать</button>'
-        }
-        else if(trackPercent == null){
-            buttonText += '<button class="sidebar-button" onclick="setMainTrack('+track_id+'); window.open(`/career_track_rieltor`, `_self`)">Начать</button>'
-        }
-    }
+if(isActive) {
+if(trackPercent == 100){
+buttonText += '<button class="start-button" onclick="setMainTrack('+track_id+'); window.open(`/career_track_rieltor`, `_self`)">Просмотреть трек</button>';
+}
+else{
+buttonText += '<button class="start-button" onclick="setMainTrack('+track_id+'); window.open(`/career_track_rieltor`, `_self`)"> Продолжить</button>';
+}
+}
+else {
+if(trackPercent == 0 || (trackPercent > 0 && trackPercent < 100)){
+buttonText += '<button class="sidebar-button" onclick="setMainTrack('+track_id+'); window.open(`/career_track_rieltor`, `_self`)">Продолжить</button>';
+}
+else if(trackPercent == 100){
+buttonText += '<button class="sidebar-button" onclick="setMainTrack('+track_id+'); window.open(`/career_track_rieltor`, `_self`)">Просмотреть трек</button>';
+}
+else if(startTrack.percent < 100){
+buttonText += '<button class="sidebar-button">Начать</button>'
+}
+else if(trackPercent == null){
+buttonText += '<button class="sidebar-button" onclick="setMainTrack('+track_id+'); window.open(`/career_track_rieltor`, `_self`)">Начать</button>'
+}
+}
 
-    return buttonText;
+return buttonText;
 }
 
 function drawMainCard(){
@@ -140,7 +151,7 @@ mainCard += '
 else{
 mainCard += '
 <a class="main-card">
-    <img src="/download_file.html?file_id=7546530365232304494" alt="Старт в недвижимости">
+    <img src="/download_file.html?file_id=7563882767447308114" alt="Старт в недвижимости">
     <div class="progress-bar">
         <div class="percent">0%</div>
         <div class="progress" id="progress"></div>
@@ -257,7 +268,7 @@ return sidebarCards;
 function isStartPassed() {
 check = true;
 
-if(startTrack.percent == 100){ check = true; }else{ check = false; }
+if(startTrackPercent == 100){ check = true; }else{ check = false; }
 
 return check;
 }
@@ -808,12 +819,12 @@ return check;
                 <div class="option-card">
                     <img src="https://i.ibb.co/MkKp4N7M/Group-87.png" alt="Новичок" class="option-image">
                     <p class="option-text">Стаж: 0-6 месяцев</p>
-                    <button class="option-btn" onclick="window.open('/career_track_rieltor', _self)">Я новичок!</button>
+                    <button class="option-btn" onclick="setMainTrack('1'); window.open('/career_track_rieltor', '_self')">Я новичок!</button>
                 </div>
                 <div class="option-card">
                     <img src="https://i.ibb.co/HLvDNpcs/Group-89.png" alt="Опытный" class="option-image">
                     <p class="option-text">Стаж: 6+ месяцев</p>
-                    <button class="option-btn" id="skilled_btn">Я опытный!</button>
+                    <button class="option-btn" id="skilled_btn" onclick="setMainTrack('1'); window.open('/career_track_rieltor', '_self')">Я опытный!</button>
                 </div>
             </div>
         </div>
@@ -871,25 +882,25 @@ return check;
     });
 
     function setMainTrack(track_id) {
-    	WTLP.oFlds.track_id = track_id;
-    	// WTLP.oFlds.sumForTickets = parseInt(etcoins);
-    	s = WTLP.Click(
-    	{
-    		sHexOWTId: WTLP.oElems["0x68F7AD8333C1F036"].sId,
-    		sAction: "remote",
-    		sRAId: "0x68F7AAC92563966C"
-    	});
+        WTLP.oFlds.track_id = track_id;
+        // WTLP.oFlds.sumForTickets = parseInt(etcoins);
+        s = WTLP.Click(
+            {
+                sHexOWTId: WTLP.oElems["0x68F7AD8333C1F036"].sId,
+                sAction: "remote",
+                sRAId: "0x68F7AAC92563966C"
+            });
 
-    	//sHexOWTId - hexID кнопки, на которую повешено удаленное действие (взять из элементов шаблона)
-    	//sRAId - hexID удаленного действия
+        //sHexOWTId - hexID кнопки, на которую повешено удаленное действие (взять из элементов шаблона)
+        //sRAId - hexID удаленного действия
     }
 
     function afterDistantAction(arg1){
-    	if(arg1 != "Ошибка"){
+        if(arg1 != "Ошибка"){
 
-    	}else if(arg1 == "Ошибка"){
-    		console.log(arg1);
-    		alert("При установке статуса произошла ошибка");
-    	}
+        }else if(arg1 == "Ошибка"){
+            console.log(arg1);
+            alert("При установке статуса произошла ошибка");
+        }
     }
 </script>
