@@ -18,44 +18,44 @@ if(startTrack != undefined){
 startTrackPercent = startTrack.percent;
 }
 
-function courseCount(track_id, mode)
+function courseCount(track_id)
 {
-courseAmount = "";
+    courseAmount = "";
 
-if(track_id == 1 || track_id == 5 || track_id == 6 || track_id == 7)
-{
-count1 = ArrayCount(XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + track_id + "' AND level_id = 1"));
-count2 = ArrayCount(XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + track_id + "' AND level_id = 2"));
+    if(track_id == 1 || track_id == 5 || track_id == 6 || track_id == 7)
+    {
+        count1 = ArrayCount(XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + track_id + "' AND level_id = 1"));
+        count2 = ArrayCount(XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + track_id + "' AND level_id = 2"));
 
-if(track_id == activeTrackId)
-{
-courseAmount += '<div class="card-point" id="start-track">
-    <img src="https://i.ibb.co/9HTD4qpB/image.png" alt="a">
-    <span>' + count1 + ' обучений</span>
-</div>
-<div class="card-point" id="start-track">
-    <span>+</span>
-</div>
-<div class="card-point" id="start-track">
-    <img src="https://i.ibb.co/9HTD4qpB/image.png" alt="a">
-    <span>' + count2 + ' обучений</span>
-</div>'
-}else {
-count = ArrayCount(XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + track_id + "'"))
-courseAmount += '<div class="card-point" id="start-track">
-    <img src="https://i.ibb.co/9HTD4qpB/image.png" alt="a">
-    <span>' + count + ' обучений</span>
-</div>';
-}
-}else {
-count = ArrayCount(XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + track_id + "'"))
-courseAmount += '<div class="card-point" id="start-track">
-    <img src="https://i.ibb.co/9HTD4qpB/image.png" alt="a">
-    <span>' + count + ' обучений</span>
-</div>';
-}
+        if(track_id == activeTrackId || collabTracksCount == 0)
+        {
+            courseAmount += '<div class="card-point" id="start-track">
+                <img src="https://i.ibb.co/9HTD4qpB/image.png" alt="a">
+                <span>' + count1 + ' обучений</span>
+            </div>
+            <div class="card-point" id="start-track">
+                <span>+</span>
+            </div>
+            <div class="card-point" id="start-track">
+                <img src="https://i.ibb.co/9HTD4qpB/image.png" alt="a">
+                <span>' + count2 + ' обучений</span>
+            </div>'
+        }else {
+            count = ArrayCount(XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + track_id + "'"))
+            courseAmount += '<div class="card-point" id="start-track">
+                <img src="https://i.ibb.co/9HTD4qpB/image.png" alt="a">
+                <span>' + count + ' обучений</span>
+            </div>';
+        }
+    }else {
+        count = ArrayCount(XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + track_id + "'"))
+        courseAmount += '<div class="card-point" id="start-track">
+            <img src="https://i.ibb.co/9HTD4qpB/image.png" alt="a">
+            <span>' + count + ' обучений</span>
+        </div>';
+    }
 
-return courseAmount;
+    return courseAmount;
 }
 
 function defineExperience(track_id)
@@ -814,17 +814,17 @@ return check;
     <div id="modal-overlay" class="modal-overlay">
         <div class="modal">
             <button class="close-btn" id="close-btn">×</button>
-            <h2 class="modal-title">Укажите свой опыт в нашей компании</h2>
+            <h2 class="modal-title">Укажите свой опыт<br>в компании «Этажи»<br></h2>
             <div class="modal-content">
                 <div class="option-card">
                     <img src="https://i.ibb.co/MkKp4N7M/Group-87.png" alt="Новичок" class="option-image">
                     <p class="option-text">Стаж: 0-6 месяцев</p>
-                    <button class="option-btn" onclick="setMainTrack('1'); window.open('/career_track_rieltor', '_self')">Я новичок!</button>
+                    <button class="option-btn" onclick="setMainTrack('1'); window.open('/career_track_rieltor', '_self')">Я новичок в Этажах!</button>
                 </div>
                 <div class="option-card">
                     <img src="https://i.ibb.co/HLvDNpcs/Group-89.png" alt="Опытный" class="option-image">
                     <p class="option-text">Стаж: 6+ месяцев</p>
-                    <button class="option-btn" id="skilled_btn" onclick="setMainTrack('1'); window.open('/career_track_rieltor', '_self')">Я опытный!</button>
+                    <button class="option-btn" id="skilled_btn" onclick="setMainTrack('0'); window.open('/career_track_rieltor', '_self')">Я опытный в Этажах!</button>
                 </div>
             </div>
         </div>
