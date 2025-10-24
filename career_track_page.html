@@ -2,9 +2,8 @@
     <%
 
     activeTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND main_or_not = 'true'"));
-    user_competence_results = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = "+ activeTrack.id +"");
     isExpierenced = XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND is_expierenced = 'true'");
-    isActivated = XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND is_activated = 'true'");
+    isActivated = XQuery("sql: SELECT track_id FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND is_activated = 'true' AND track_id = '" + activeTrack.track_id + "'");
 
     tracks = XQuery("sql: SELECT * FROM career_tracks.tracks");
 
@@ -18,33 +17,40 @@
     // берем все курсы текущего сотрудника
     allPersonsCourses = XQuery("sql: SELECT * FROM career_tracks.all_persons_courses WHERE person_id = "+ curUserID +" ORDER BY state_id DESC");
 
-    if(ArrayCount(isActivated) == 0 && curUserID == 7486349730272889682){
+    cert_id = Int(7564683094932454725); // сертификат
+
+	function createCert() {
+		havePersonCert = XQuery("sql: select * from dbo.certificates where type_id = " + Int(cert_id) + " and person_id = " + curUserID);
+		if (ArrayCount(havePersonCert) == 0) {
+			cert = tools.create_certificate_to_person(curUserID, cert_id)
+			docTransaction = tools.pay_new_transaction_by_object(Int(curUserID), "bonus", 150, 'Зачисление эткоинов за Сертификат об успешном окончании программы "Школа юриспруденции для риелтора"', Int(cert_id));
+		}
+	}
+
+    if(ArrayCount(isActivated) == 0){
 
         function checkLevel(level_id, person_id){
             // узнаем, есть ли начатый уровень у сотрудника - если есть: вернем id записи, иначе 0
             collab_level_id = 0;
-            collab_id = ArrayOptFirstElem(XQuery("sql: SELECT id FROM career_tracks.collabs_tracks WHERE track_id = " + activeTrack.track_id + " AND collab_id = " + person_id + ""));
-            collab_level = ArrayOptFirstElem(XQuery("sql: SELECT id FROM career_tracks.collab_levels WHERE level_id = "+ level_id +" AND collabs_tracks_id = "+ collab_id.id +""));
+            collab_level = ArrayOptFirstElem(XQuery("sql: SELECT id FROM career_tracks.collab_levels WHERE level_id = "+ level_id +" AND collabs_tracks_id = "+ activeTrack.id +""));
                 
-            if(collab_level != undefined){collab_level_id = Int(collab_level.id);}
-                
-            return collab_level_id;
+            if(collab_level != undefined){collab_level_id = collab_level.id;}
         }
 
         function update_or_create_competence(person_track_id, person_competence_id, level, new_percent){
 
             if(level != 0){
 
-                competence = ArrayOptFirstElem(XQuery("sql: SELECT id FROM career_tracks.collab_competences WHERE competence_id = "+ person_competence_id +" AND collabs_tracks_id = "+ person_track_id +" AND level_id = "+ level +""));
+                competence = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE competence_id = "+ person_competence_id +" AND collabs_tracks_id = "+ person_track_id +" AND level_id = "+ level +""));
 
                 if(competence != undefined){
-                    update_person_competence = ArraySelectAll(XQuery('sql: UPDATE career_tracks.collab_competences SET "percent" = ' + new_percent + ' WHERE id = ' + competence.id + ''));
+                    update_person_competence = ArraySelectAll(XQuery('sql: UPDATE career_tracks.collab_competences SET "percent" = ' + new_percent + ' WHERE id = ' + competence.id + ' AND level_id = ' + level + ''));
                 } else{ // иначе добавляем новую строку
                     create_person_competence = ArraySelectAll(XQuery('sql: INSERT INTO career_tracks.collab_competences (competence_id, collabs_tracks_id, level_id, "percent") VALUES ('+ person_competence_id +', ' + person_track_id + ', ' + level + ', ' + Int(new_percent) + ')'));
                 }
 
             }else{
-                competence = ArrayOptFirstElem(XQuery("sql: SELECT id FROM career_tracks.collab_competences WHERE competence_id = "+ person_competence_id +" AND collabs_tracks_id = "+ person_track_id +""));
+                competence = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE competence_id = "+ person_competence_id +" AND collabs_tracks_id = "+ person_track_id +""));
 
                 if(competence != undefined){
                     update_person_competence = ArraySelectAll(XQuery('sql: UPDATE career_tracks.collab_competences SET "percent" = ' + new_percent + ' WHERE id = ' + competence.id + ''));
@@ -61,7 +67,7 @@
             // если это компетенция уровня, то выполняем этот запрос
             if(level_id != 0){
                 // все курсы компетенции
-                all_competence_courses = XQuery("sql: SELECT course_id FROM career_tracks.courses_from_tracks WHERE level_id = "+ level_id +" AND competence_id = "+ competence_id +" AND track_id = " + activate_track.track_id + "");
+                all_competence_courses = XQuery("sql: SELECT course_id FROM career_tracks.courses_from_tracks WHERE level_id = "+ level_id +" AND competence_id = "+ competence_id +" AND track_id = " + person_track_id + "");
             } else {
 
                 // все курсы компетенции
@@ -82,8 +88,7 @@
         }
 
         function countLevelPercent(level_id, person_id){
-            collab_id = ArrayOptFirstElem(XQuery("sql: SELECT id FROM career_tracks.collabs_tracks WHERE track_id = 1 AND collab_id = " + person_id + ""));
-            persons_competences = XQuery("sql: SELECT competence_id FROM career_tracks.collab_competences WHERE collabs_tracks_id = " + collab_id.id + " AND level_id = " + level_id + "");
+            persons_competences = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = " + activeTrack.id + " AND level_id = " + level_id + "");
 
             competence_quantity = ArrayCount(persons_competences);
             percent = 0;
@@ -95,19 +100,18 @@
             return (Math.round(percent / competence_quantity));
         }
 
-        function update_or_create_level(person_level_id, percent){
+        function update_or_create_level(person_level_id, percent, level){
             if (person_level_id) { // уровень есть
                 // обновляем процент прохождения уровня в таблице
                 update_person_level = ArraySelectAll(XQuery('sql: UPDATE career_tracks.collab_levels SET "percent" = ' + percent + ' WHERE id = ' + person_level_id + ''));
             } else { // уровня нет
                 // создаем активный уровень у сотрудника, добавляем процент в таблицу
-                create_person_level = ArraySelectAll(XQuery('sql: INSERT INTO career_tracks.collab_levels (collabs_tracks_id, level_id, "percent") VALUES (' + activeTrack.id + ', ' + person_level_id + ', ' + Int(percent) + ')'));
+                create_person_level = ArraySelectAll(XQuery('sql: INSERT INTO career_tracks.collab_levels (collabs_tracks_id, level_id, "percent") VALUES (' + activeTrack.id + ', ' + level + ', ' + Int(percent) + ')'));
             }
         }
 
         function countTrackPercent(person_track_id, person_id){
-            collab_id = ArrayOptFirstElem(XQuery("sql: SELECT id FROM career_tracks.collabs_tracks WHERE track_id = " + person_track_id + "AND collab_id = " + person_id + ""));
-            persons_competences = XQuery("sql: SELECT percent FROM career_tracks.collab_competences WHERE collabs_tracks_id = " + collab_id.id + "");
+            persons_competences = XQuery("sql: SELECT percent FROM career_tracks.collab_competences WHERE collabs_tracks_id = " + person_track_id + "");
 
             competence_quantity = ArrayCount(persons_competences);
             percent = 0;
@@ -123,47 +127,47 @@
 
             if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_id == 6 || activeTrack.track_id == 7) {
 
-                course_person_level1 = checkLevel(1);
-                course_person_level2 = checkLevel(2);
+                course_person_level1 = checkLevel(1, curUserID);
+                course_person_level2 = checkLevel(2, curUserID);
 
                 level1_CompetencesNames = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE track_id = '" + activeTrack.track_id + "' AND level_id = '" + 1 + "'");
 
                 for(one_competence in level1_CompetencesNames) {
                     new_percent = countCompetencePercent(1, one_competence.competence_id, all_persons_courses, activeTrack.track_id);
-                    course_person_competence = update_or_create_competence(activeTrack.track_id, one_competence.competence_id, 1, new_percent);
+                    course_person_competence = update_or_create_competence(activeTrack.id, one_competence.competence_id, 1, new_percent);
                 }
 
                 level2_CompetencesNames = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE track_id = '" + activeTrack.track_id + "' AND level_id = '" + 2 + "'");
 
                 for(one_competence in level2_CompetencesNames) {
                     new_percent = countCompetencePercent(2, one_competence.competence_id, all_persons_courses, activeTrack.track_id);
-                    course_person_competence = update_or_create_competence(activeTrack.track_id, one_competence.competence_id, 2, new_percent);
+                    course_person_competence = update_or_create_competence(activeTrack.id, one_competence.competence_id, 2, new_percent);
                 }
 
                 new_percent1 = countLevelPercent(1, curUserID);
                 new_percent2 = countLevelPercent(2, curUserID);
 
-                up_cr_l1 = update_or_create_level(course_person_level1, new_percent1);
-                up_cr_l2 = update_or_create_level(course_person_level2, new_percent2);
+                up_cr_l1 = update_or_create_level(course_person_level1, new_percent1, 1);
+                up_cr_l2 = update_or_create_level(course_person_level2, new_percent2, 2);
 
-                new_percent = countTrackPercent(activeTrack.track_id, curUserID);
+                new_percent = countTrackPercent(activeTrack.id, curUserID);
                 update_person_track = ArraySelectAll(XQuery('sql: UPDATE career_tracks.collabs_tracks SET "percent" = ' + new_percent + ' WHERE id = ' + activeTrack.id + ''));
 
             }else {
                 
-                competencesNames = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE track_id = 2");
+                competencesNames = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE track_id = '" + active_track.track_id);
 
                 for(one_competence in competencesNames) {
                     new_percent = countCompetencePercent(0, one_competence.competence_id, all_persons_courses, activeTrack.track_id);
-                    course_person_competence = update_or_create_competence(activeTrack.track_id, one_competence.competence_id, 0, new_percent);
+                    course_person_competence = update_or_create_competence(activeTrack.id, one_competence.competence_id, 0, new_percent);
                 }
 
-                new_percent = countTrackPercent(activeTrack.track_id, curUserID);
+                new_percent = countTrackPercent(activeTrack.id, curUserID);
                 update_person_track = ArraySelectAll(XQuery('sql: UPDATE career_tracks.collabs_tracks SET "percent" = ' + new_percent + ' WHERE id = ' + activeTrack.id + ''));
 
             }
 
-        activate_track = ArraySelectAll(XQuery('sql: UPDATE career_tracks.collabs_tracks SET is_activated = ' + true + ' WHERE collab_id = ' + curUserID + ' AND track_id = ' + activeTrack.track_id + ''));
+        activate_track = ArraySelectAll(XQuery('sql: UPDATE career_tracks.collabs_tracks SET is_activated = ' + true + ' WHERE id = ' + activeTrack.id + ''));
     }
 
     // проверка на трек: старт или обычный
@@ -240,11 +244,14 @@
 
         if (level == 'level'){
             levelCompetencesForModule = levelCompetences;
+            user_competence_results = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = "+ activeTrack.id +"");
         } else{
             if(level == 'level1'){
                 levelCompetencesForModule = firstLevelCompetences;
+                user_competence_results = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = "+ activeTrack.id +" AND level_id = 1");
             } else if(level == 'level2') {
                 levelCompetencesForModule = secondLevelCompetences;
+                user_competence_results = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = "+ activeTrack.id +" AND level_id = 2");
             } else{
 
                 return modules;
@@ -286,13 +293,16 @@
 
         if(level == 'level'){
             levelCompetencesForModule = levelCompetences;
+            user_competence_results = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = "+ activeTrack.id +"");
             levelOfCourse = null;
         } else{
             if(level == 'level1'){
                 levelCompetencesForModule = firstLevelCompetences;
+                user_competence_results = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = "+ activeTrack.id +" AND level_id = 1");
                 levelOfCourse = 1;
             } else if(level == 'level2') {
                 levelCompetencesForModule = secondLevelCompetences;
+                user_competence_results = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = "+ activeTrack.id +" AND level_id = 2");
                 levelOfCourse = 2;
             } else{
 
@@ -357,7 +367,7 @@
         test = "";
         test += '<div class="test-container">
             <h1 class="test-header">Итоговый тест по треку «Старт в недвижимости»</h1>
-        <div id="test-desc"><b>Количество попыток:</b> 2<br><b>Продолжительность:</b> 30 минут<br><br>Если вы опытный сотрудник в компании Этажи, то не обязательно проходить курсы 0-3 месяца, 4-6 месяцев. Если подтвердите знания по данному тесту, трек завершится автоматически. <b>Если тестирование не будет пройдено необходимо будет пройти обучения.</b></div>
+        <div id="test-desc"><b>Количество попыток:</b> 2<br><b>Продолжительность:</b> 30 минут<br><br>Если вы опытный сотрудник в компании Этажи, то не обязательно проходить курсы 0-3 месяца, 4-6 месяцев. В случае подтверждения знаний по данному тесту, трек завершится автоматически. <b>Если тестирование не будет пройдено успешно, необходимо пройти обучения.</b></div>
         <div class="test-button-container">
             <button id="test-button" onclick="window.open(`/_wt/7560603229131710427`, `_blank`)">Начать тест</button>
         </div>
@@ -1021,5 +1031,9 @@
             behavior: "smooth",
         }));
     });
+
+    <%if (activeTrack.percent == 100 || curUserID == 7486349730272889682) {
+        createCert();
+    }%>
 
 </script>
