@@ -1,0 +1,292 @@
+<%
+
+//проверка риес-кода сотрудника для открытия Карьерного трека в боковом меню
+function checkRiesCode(personCode, codesArray){
+	for(code in codesArray){
+		if(personCode == Trim(code)){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+var flag = '';
+spn_flag = 0;
+mop_flag = 0;
+hr_flag = 0;
+pos_carry = {};
+pos_carry.code = 0;
+if( tools_web.check_object(curObject, "collaborator") )
+{
+	//сработает, если открыта страница другого сотрудника (например, через панель руководителя)
+	iPersonID = curObjectID;
+	if(iPersonID==curUserID){
+		flag = 'im';
+		curr_user = OpenDoc(UrlFromDocID(iPersonID)); 
+		iPersonRiesCode = curr_user.TopElem.code;
+	}else{
+		flag = 'other';
+	}
+
+	role_flag = 1;
+}
+else
+{
+	//сработает, если открыта Главная (личный кабинет)
+	iPersonID = curUserID;
+	flag = 'im';
+
+	curr_user = OpenDoc(UrlFromDocID(iPersonID)); 
+	iPersonPosID = curr_user.TopElem.position_id;
+	iPersonCode = curr_user.TopElem.code;
+	//lvl_general = 0;
+	role_flag = 0;
+	//role_block = 0;
+	roles_list = tools_web.get_web_param( curParams, "roles_list", [], true );
+	spn_codes = tools_web.get_web_param( curParams, "spn_codes", [], true );
+	mop_codes = tools_web.get_web_param( curParams, "mop_codes", [], true );
+	hr_codes = tools_web.get_web_param( curParams, "hr_codes", [], true );
+	for (role in roles_list)
+	{
+		roles_string = role.roles;
+		roles_array = roles_string.split(';');
+		for(roles_item in roles_array){
+			request_array_pos = XQuery('for $elem in positions where $elem/id = '+iPersonPosID+' return $elem');
+			pos_carry = ArrayOptFirstElem(request_array_pos);
+			if(roles_item==pos_carry.code){
+				role_flag += 1;
+				//role_block = role.block;
+				//lvl_general = role.lvl;
+				break;
+			}
+		}
+		if(role_flag!=0){break;}
+	}
+	if(checkRiesCode(iPersonCode, spn_codes)){spn_flag++;}
+	if(checkRiesCode(iPersonCode, mop_codes)){mop_flag++;}
+	if(checkRiesCode(iPersonCode, hr_codes)){hr_flag++;}
+}
+
+%>
+<style>
+	.main_section{
+		width:100%;
+		display: flex;
+		flex-direction: column;
+		max-width: 1150px;
+	}
+	.tabs{
+		display: flex;
+		justify-content: center;
+		align-items: flex-start;
+		flex-direction: column;
+		margin-left: 20px;
+	}
+	.tab_button{
+		border: none;
+		color: black;
+		margin: 0;
+		font-size: 14px;
+		cursor: pointer;
+		height: 36px;
+		line-height: 1.5;
+		width: 100%;
+		padding: 8px;
+		text-align: start;
+		font-weight: 500;
+	}
+	.tab_button:hover{
+		background-color: #eeeff5 !important;
+		border-radius: 4px 0 0 4px;
+		color: black;
+	}
+	.tab_active{
+		background-color: #eeeff5 !important;
+		border-radius: 4px 0 0 4px;
+		color: black;
+	}
+	.preloader{
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+	.tab_growth img{
+		width: 13px;
+		display: initial;
+		margin-left: 10px;
+		vertical-align: middle;
+		margin-bottom: 2px;
+	}
+	.tab_priority_education img{
+		width: 18px;
+		display: initial;
+		margin-left: 10px;
+		vertical-align: middle;
+		margin-bottom: 2px;
+	}
+	.star_anim{
+		animation: 3s ease blink infinite;
+	}
+	@keyframes blink {
+		0% {
+			opacity: 0;
+		}
+
+		50% {
+			opacity: 0.7;
+		}
+
+		100% {
+			opacity: 0;
+		}
+	}
+	@media (max-width: 1600px) {
+		.tab_button {
+			font-size: 13px;
+		}
+	}
+	@media (max-width: 1200px) {
+		.tabs {
+			margin-left: 10px;
+		}
+		.person-info {
+			margin-left: 20px;
+		}
+	}
+	@media (max-width: 1150px) {
+		.column-lk-1 {
+			width: 25% !important;
+		}
+		.column-lk-2 {
+			width: 70% !important;
+		}
+		.column-lk-3 {
+			width: 10% !important;
+		}
+	}
+</style>
+
+<script>
+$(document).ready(function(){
+	
+	$.fn.iframeAppend = function(type, url){
+		$(".tab_button").removeClass('tab_active');
+		$(`${type}.tab_button`).addClass('tab_active');
+		
+		$("div.iframe_section iframe").remove();
+        $("div.iframe_section").append(`<iframe src="${url}" style="border:0px #ffffff none;" name="myiFrame1" frameborder="1" marginheight="0px" marginwidth="0px" height="2500px" width="100%" allowfullscreen onload="resizeIframe(this)" scrolling="no"></iframe>`);
+	};
+	<%
+	if(flag=='im'){%>
+		$.fn.iframeAppend('.tab_main', '_wt/lk_tab_main');
+	<%
+	}else{%>
+		$.fn.iframeAppend('.tab_main', '_wt/lk_tab_main/<%=iPersonID%>');
+	<%}%>
+});
+</script>
+<div class="main_section">
+	<div class="tabs">
+		<%
+		if(flag=='im'){%>
+			<button class="tab_main tab_button" onclick="javascript:$.fn.iframeAppend('.tab_main', '_wt/lk_tab_main');">Общая информация</button>
+			<button class="tab_course tab_button" onclick="javascript:$.fn.iframeAppend('.tab_course', '_wt/lk_tab_course/<%=iPersonID%>', '');" id="but-test2">Мои курсы</button>
+			<button class="tab_test tab_button" onclick="javascript:$.fn.iframeAppend('.tab_test', '_wt/lk_tab_test/<%=iPersonID%>', '');" id="but-test2">Мои тесты</button>
+			<button class="tab_task tab_button" onclick="javascript:$.fn.iframeAppend('.tab_task', '_wt/lk_tab_task/<%=iPersonID%>', '');" id="but-test2">Мои задания</button>
+			<button class="tab_book tab_button" onclick="javascript:$.fn.iframeAppend('.tab_book', '_wt/lk_tab_book/<%=iPersonID%>', '');" id="but-test2">Мои книги</button>
+			<button class="tab_achive tab_button" onclick="javascript:$.fn.iframeAppend('.tab_achive', '_wt/lk_tab_achive/<%=iPersonID%>', '');" id="but-test2" style="display: none;">Все достижения</button>
+			<button class="tab_cert tab_button" onclick="javascript:$.fn.iframeAppend('.tab_cert', '_wt/lk_tab_cert/<%=iPersonID%>', '');" id="but-test2" style="display: none;">Все сертификаты</button>
+			<button class="tab_transact tab_button" onclick="javascript:$.fn.iframeAppend('.tab_transact', '_wt/lk_tab_trans/<%=iPersonID%>', '');" id="but-test2" style="display: none;">Все транзакции</button>
+			<button class="tab_track tab_button" onclick="javascript:$.fn.iframeAppend('.tab_track', '_wt/lk_tab_track', '');" id="but-test2" style="display: none;">Карьерный трек</button>
+            <button class="tab_rieltor_track" onclick="window.open('http://education.etagi.com/career_tracks_rieltor', '_blank')" id="but-test2" style="display: none;">Мой карьерный трек</button>
+			<%if(role_flag == 0){%>
+				<button class="tab_priority_education tab_button" onclick="window.open('https://education.etagi.com/priority_education', '_blank');" id="but-test2">Приоритетное обучение
+				<!-- <img class="star_anim" src="http://education.etagi.com/download_file.html?file_id=7352840874046989932"> --></button>
+			<%}%>
+			<%if(role_flag == 1){%>
+				<button class="tab_for_top tab_button" onclick="window.open('https://education.etagi.com/for_top', '_blank');" id="but-test2">Хочу быть ТОПом или уже ТОП</button>
+			<%}%>
+			<%if(spn_flag){%>
+				<button class="tab_spn tab_button" onclick="window.open('https://education.etagi.com/career_tracks_rieltor', '_blank')" id="but-test2">Карьерный трек СПН</button>
+			<%}%>
+			<%if(mop_flag){%>
+				<button class="tab_mop tab_button" onclick="javascript:$.fn.iframeAppend('.tab_mop', '_wt/lk_tab_mop', '');" id="but-test2">Карьерный трек МОП</button>
+			<%}%>
+			<%if(hr_flag){%>
+				<button class="tab_hr tab_button" onclick="javascript:$.fn.iframeAppend('.tab_hr', '_wt/lk_tab_hr', '');" id="but-test2">Карьерный трек HR</button>
+			<%}%>
+			<!-- <button class="tab_add_educ tab_button" onclick="window.open('https://education.etagi.com/experienced', '_blank');" id="but-test2">Материалы для доп. развития</button> -->
+		<%
+		}else{%>
+			<button class="tab_main tab_button" onclick="javascript:$.fn.iframeAppend('.tab_main', '_wt/lk_tab_main/<%=iPersonID%>');">Общая информация</button>
+			<button class="tab_course tab_button" onclick="javascript:$.fn.iframeAppend('.tab_course', '_wt/lk_tab_course/<%=iPersonID%>', '');" id="but-test2">Курсы</button>
+			<button class="tab_test tab_button" onclick="javascript:$.fn.iframeAppend('.tab_test', '_wt/lk_tab_test/<%=iPersonID%>', '');" id="but-test2">Тесты</button>
+			<button class="tab_book tab_button" onclick="javascript:$.fn.iframeAppend('.tab_book', '_wt/lk_tab_book/<%=iPersonID%>', '');" id="but-test2">Книги</button>
+			<button class="tab_achive tab_button" onclick="javascript:$.fn.iframeAppend('.tab_achive', '_wt/lk_tab_achive/<%=iPersonID%>', '');" id="but-test2">Достижения</button>
+			<button class="tab_cert tab_button" onclick="javascript:$.fn.iframeAppend('.tab_cert', '_wt/lk_tab_cert/<%=iPersonID%>', '');" id="but-test2">Сертификаты</button>
+			<button class="tab_track tab_button" onclick="javascript:$.fn.iframeAppend('.tab_track', '_wt/lk_tab_track/<%=iPersonID%>', '');" id="but-test2" style="display: none;">Карьерный трек</button>
+		<%}%>
+	</div>
+</div>
+
+<script>
+	let mainButton = document.querySelector(".tab_main");
+	let transactButton = document.querySelector(".tab_transact");
+	let achieveButton = document.querySelector(".tab_achive");
+	let certButton = document.querySelector(".tab_cert");
+	let trackButton = document.querySelector(".tab_track");
+	let coursesButton = document.querySelector(".tab_course");
+    let rieltorTrackButton = document.querySelector(".tab_rieltor_track");
+
+	var isButton = "";
+	
+	let clickEvent = new Event("click");
+
+	window.onmessage = function(event){
+	    if (event.data == 'scored') {
+		isButton = true;
+	    }
+	    else if(event.data == 'balance') {
+		transactButton.dispatchEvent(clickEvent);
+	    }
+	    else if(event.data == 'achieve') {
+		achieveButton.dispatchEvent(clickEvent);
+	    }
+	    else if(event.data == 'cert') {
+		certButton.dispatchEvent(clickEvent);
+	    }
+	    else if(event.data == 'main') {
+		mainButton.dispatchEvent(clickEvent);
+	    }
+	    else if(event.data == 'track') {
+		trackButton.dispatchEvent(clickEvent);
+	    }
+	    else if(event.data == 'courses') {
+		coursesButton.dispatchEvent(clickEvent);
+	    }
+        else if(event.data == 'rieltor_track') {
+        rieltorTrackButton.dispatchEvent(clickEvent);
+        }
+	};
+
+	let tabsDiv = document.querySelector('.tabs');
+	window.onload = function(){
+		//if (location.protocol !== 'http:') {
+		    //location.href = 'http://' + window.location.host + window.location.pathname;
+		//}
+		let tabsDiv = document.querySelector('.tabs');
+		
+		if(isButton){
+			tabsDiv.innerHTML += `
+				<button class="tab_growth tab_button" onclick="javascript:$.fn.iframeAppend('.tab_growth', '_wt/lk_tab_growth');" id="but-test2">Развитие в компании
+				<!-- иконка звездочки, убрать комментарии, если понадобится
+				<img class="star_anim" src="http://education.etagi.com/download_file.html?file_id=7316492203542222476">--></button>`;
+		}
+	}
+
+  function resizeIframe(obj) {
+    obj.style.height = obj.contentWindow.document.body.scrollHeight + 'px';
+  }
+
+</script>
