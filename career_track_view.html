@@ -1,0 +1,441 @@
+<%
+
+flag = 0;
+if( tools_web.check_object(curObject, "collaborator") )
+{
+	iPersonID = curObjectID;
+}
+else
+{
+	iPersonID = curUserID;
+	flag = 1;
+}
+
+tracks = XQuery("sql: SELECT * FROM career_tracks.tracks");
+allPersonsCourses = XQuery("sql: SELECT * FROM career_tracks.all_persons_courses WHERE person_id = "+ iPersonID +" ORDER BY state_id DESC");
+
+function drawTabs() {
+	tabs = "";
+
+	tabs += '<div class="tabs">';
+
+	for(track in tracks)
+	{
+		if(track.id != 5 && track.id != 6 && track.id != 7) {
+			tabs += '<div class="tab" data-section="wrapper' + track.id + '">' + track.name + '</div>';
+		}
+	}
+	tabs += '</div>';
+
+	return tabs;
+}
+
+function drawHead() {
+    head = "";
+
+    for(track in tracks)
+    {
+        if(track.id != 5 && track.id != 6 && track.id != 7){
+            head += '<div class="header-section wrapper' + track.id + '"><img class="header-img" src="http://education.etagi.com/download_file.html?file_id=' + track.image + '"
+            <div class="text-content">
+                <h2>' + track.name + '</h2>
+                <div class="progress-bar">
+                    <div class="progress"></div>
+                    <div class="percent"></div>
+                </div>
+            </div>
+        </div>';
+        }
+    }
+
+    return head;
+}
+
+function drawCourses(track_id, level) {
+	coursesBlock = "";
+	levelOfCourse = 0;
+    i = 0;
+	collabsTracksId = ArrayOptFirstElem(XQuery("sql: SELECT id FROM career_tracks.collabs_tracks WHERE collab_id = " + iPersonID + " AND track_id = " + track_id + ""));
+	competenceCourses = XQuery("sql: SELECT DISTINCT c.name, t.course_id, t.level_id FROM dbo.competences AS c JOIN career_tracks.courses_from_tracks AS t ON c.id = t.competence_id WHERE c.code = 'kt' AND t.track_id = '" + track_id + "'");
+
+    firstLevelCompetences = [];
+    secondLevelCompetences = [];
+    levelCompetences = [];
+
+	if(track_id == 1){
+    	firstLevelCompetences = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE level_id = '1'");
+    	secondLevelCompetences = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE level_id = '2'");
+	}else{
+    	levelCompetences = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE track_id = '"+ track_id +"'");
+	}
+
+    if(collabsTracksId != undefined){
+        if(level == 'level'){
+            levelCompetencesForModule = levelCompetences;
+            user_competence_results = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = "+ collabsTracksId.id +"");
+            levelOfCourse = null;
+	    }else{
+            if(level == 'level1'){
+                levelCompetencesForModule = firstLevelCompetences;
+                user_competence_results = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = "+ collabsTracksId.id +" AND level_id = 1");
+                levelOfCourse = 1;
+            }else if(level == 'level2'){
+                levelCompetencesForModule = secondLevelCompetences;
+                user_competence_results = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = "+ collabsTracksId.id +" AND level_id = 2");
+                levelOfCourse = 2;
+            }else{
+                coursesBlock = '<p>Ниче нету</p>';
+                return coursesBlock;
+            }
+	    }
+    }else{
+        coursesBlock = '<p>Ниче нету</p>';
+        return coursesBlock;
+    }
+
+	if(track_id == 1){
+		coursesBlock += '<div class="btn-wrapper"><button id="left" class="levelBtn active" data-section="section1">0-3 месяца</button><button id="right" class="levelBtn" data-section="section2">4-6 месяцев</button></div>';
+	}
+
+	for(competence in levelCompetencesForModule){
+		competence_result = 0;
+		for(comp_res in user_competence_results){
+			if(comp_res.competence_id == competence.competence_id){
+				competence_result = comp_res.percent;
+				break;
+			}
+		}
+
+		competenceObj = OpenDoc(UrlFromDocID(Int(competence.competence_id)));
+
+		coursesBlock += '<div class="section" data-section='+ competence.competence_id +'>
+                <div class="section-bar">
+                <div class="section-title">'+ competenceObj.TopElem.name +'</div>
+        	</div>
+            <div class="section-progressbar">
+                <div class="section-progress" style="width: ' + competence_result + '%;"></div>
+                <div class="section-percent">'+ competence_result +'%</div>
+            </div>
+        <div class="course-cards">';
+
+        for(courses in competenceCourses){
+            if(courses.name == competenceObj.TopElem.name && courses.level_id == levelOfCourse){
+                courseObj = OpenDoc(UrlFromDocID(Int(courses.course_id)));
+
+                percent = 0;
+                isCompleted = false;
+                for(allCourses in allPersonsCourses){
+                	if(courseObj.TopElem.id == allCourses.course_id){
+                    	percent = allCourses.percent;
+                    	if(allCourses.state_id == '4'){isCompleted = true;}
+                    break;
+                	}
+            	}	
+
+				coursesBlock += '<div class="course-card" onclick="window.open(`/_wt/'+ courseObj.TopElem.id +'`, `_blank`)">
+                	<img class="course-img" src="/download_file.html?file_id='+ courseObj.TopElem.resource_id +'">
+                	<h3>'+ courseObj.TopElem.name +'</h3>
+                	<div class="course-card-progressbar">
+                    	<div class="course-card-progress" style="width: '+ percent +'%"></div>
+                    	<div class="course-card-percent">'+ percent +'%</div>
+                	</div>
+            	</div>';
+			}
+		}
+		i++;
+		coursesBlock += '</div></div>';
+	}
+	return coursesBlock;
+}
+
+allCode = "";
+
+allCode += '<div class="section-wrapper wrapper1">
+        <div class="level-sections section1">' + drawCourses(1, "level1") + '</div>
+        <div class ="level-sections section2" style="display: none;">' + drawCourses(1, "level2") +'</div>
+    </div>
+    <div class="section-wrapper wrapper2" style="display: none;">
+	    <div class="sections">' + drawCourses(2, "level") + '</div>
+	</div>
+    <div class="section-wrapper wrapper3" style="display: none;">
+	    <div class="sections">' + drawCourses(3, "level") + '</div>
+	</div>
+    <div class="section-wrapper wrapper4" style="display: none;">
+	    <div class="sections">' + drawCourses(4, "level") + '</div>
+	</div>';
+%>
+
+<style>
+
+    :root {
+        --text_header_color: #fff;
+        --text_secondary_color: #000;
+        --progress_bar_color: #fff;
+        --text_items_color: #fff;
+        --track_progress_color: #B9D2B8;
+        --page_secondary_color: #AAB0C8;
+        --page_main_color: #545F92;
+    }
+
+    .btn-wrapper{
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+    }
+
+    .levelBtn{
+        border: 1px solid #cacfe700;
+        padding: 8px 16px;
+        width: 50%;
+        background-color: var(--page_secondary_color);
+        color: #2c3979;
+        font-size: 16px;
+        cursor: pointer;
+        text-align: center;
+        transition: 0.1s;
+    }
+
+    .levelBtn:hover{
+        background-color: #CACFE7;
+        transition: 0.3s;
+        border: none;
+    }
+
+    .levelBtn.active{
+        background-color: var(--page_main_color);
+        color: white;
+        transition: 0.1s;
+    }
+
+    #left{
+        border-radius: 10px 0 0 10px;
+    }
+
+    #right{
+        border-radius: 0 10px 10px 0;
+    }
+
+    .container {
+    	background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        width: 85%;
+        overflow: hidden;
+    }
+
+    .tabs {
+        display: flex;
+        border-bottom: 1px solid #e5e7eb;
+        background-color: #f9fafb;
+    }
+
+    .tab {
+        padding: 16px 24px;
+        cursor: pointer;
+        font-weight: 500;
+        color: #4b5563;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .tab.active {
+        color: #1f2937;
+        background-color: white;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+    }
+
+    .tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background-color: var(--page_main_color);
+    }
+
+    .tab:hover:not(.active) {
+        background-color: #f3f4f6;
+    }
+
+    .content {
+        padding: 32px;
+    }
+
+    .header-section {
+        display: flex;
+        align-items: flex-start;
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+
+    .text-content h2 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 16px;
+    }
+
+    .sections {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        width: 100%;
+    }
+
+    .level-sections {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        width: 100%;
+    }
+
+    .section {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .section-bar {
+        background-color: var(--page_main_color);
+        border-radius: 10px;
+    }
+
+    .section-title {
+        font-size: 3rem;
+        font-weight: 500;
+        color: #F6F6F6;
+        padding: 10px 15px;
+    }
+
+    .section-progressbar {
+        height: 20px;
+        background-color: #F6F6F6;
+        overflow: hidden;
+        position: relative;
+        border-radius: 12px;
+    }
+
+    .section-progress {
+        height: 100%;
+        background-color: var(--track_progress_color);
+        width: 0;
+        position: absolute;
+        z-index: 1;
+    }
+
+    .section-percent {
+        text-align: center;
+        position: relative;
+        color: var(--text_secondary_color);
+        z-index: 2;
+    }
+
+    .course-cards {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .course-card {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        height: 260px;
+        width: 23%;
+        border-radius: 10px;
+        background-color: white;
+        cursor: pointer;
+        align-items: center;
+        transition: 0.3s;
+        border: 0.5px solid #c7c7c773;
+        box-shadow: 0 4px 8px rgba(231, 231, 231, 0.1);
+    }
+
+    .course-card:hover {
+        background-color: #f2f2f2;
+    }
+
+    .course-img {
+        height: 122px;
+        width: 83%;
+        border-radius: 8px;
+        margin: 20px 0 10px 0;
+        object-fit: cover;
+    }
+
+    .course-card h3 {
+        padding: 0 20px;
+        font-size: 1.4rem;
+        height: 90px;
+        overflow: hidden;
+        color: var(--text_secondary_color);
+    }
+
+    .course-card-progressbar {
+        margin: 0 0 10px 0;
+        width: 80%;
+        background-color: #F6F6F6;
+        height: 20px;
+        overflow: hidden;
+        position: relative;
+        border-radius: 12px;
+    }
+
+    .course-card-progress {
+        height: 100%;
+        background-color: var(--page_secondary_color);
+        width: 0;
+        position: absolute;
+        z-index: 1;
+    }
+
+    .course-card-percent {
+        font-size: 1.3rem;
+        text-align: center;
+        position: absolute;
+        width: 100%;
+        z-index: 2;
+        color: var(--text_secondary_color);
+    }
+
+</style>
+
+<div class="container">
+    <%=drawTabs()%>        
+    <div class="content">           
+        <%=allCode%>
+    </div>
+</div>
+
+<script>
+    document.querySelector('.tab').classList.add('active');
+
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelectorAll('.section-wrapper').forEach(t => t.style.display = 'none');
+            document.querySelectorAll('.header-section').forEach(t => t.style.display = 'none');
+            document.querySelector('.' + tab.getAttribute("data-section")).style.display = "flex";
+        });
+    });
+
+    document.querySelectorAll('.levelBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.levelBtn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.level-sections').forEach(s => s.style.display = 'none');
+            document.querySelector('.' + btn.getAttribute("data-section")).style.display = "flex";
+        });
+    });
+</script>
+

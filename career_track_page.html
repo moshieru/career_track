@@ -29,7 +29,7 @@
 
     if(ArrayCount(isActivated) == 0 || curUserID == 7486349730272889682){
 
-        function checkLevel(level_id, person_id){
+        function checkLevel(level_id){
             // узнаем, есть ли начатый уровень у сотрудника - если есть: вернем id записи, иначе 0
             collab_level_id = 0;
             collab_level = ArrayOptFirstElem(XQuery("sql: SELECT id FROM career_tracks.collab_levels WHERE level_id = "+ level_id +" AND collabs_tracks_id = "+ activeTrack.id +""));
@@ -64,7 +64,7 @@
             return 1;
         }
 
-        function countCompetencePercent(level_id, competence_id, persons_courses, person_track_id){
+        function countCompetencePercent(level_id, competence_id, person_track_id){
             
             // если это компетенция уровня, то выполняем этот запрос
             if(level_id != 0){
@@ -97,6 +97,7 @@
         }
 
         function update_or_create_level(person_level_id, percent, level){
+
             if (person_level_id > 0) { // уровень есть
                 // обновляем процент прохождения уровня в таблице
                 update_person_level = ArraySelectAll(XQuery('sql: UPDATE career_tracks.collab_levels SET "percent" = ' + percent + ' WHERE id = ' + person_level_id + ''));
@@ -118,24 +119,23 @@
 
             return (Math.round(Real((percent / competence_quantity))));
         }
-
-        all_persons_courses = XQuery("sql: SELECT * FROM career_tracks.all_persons_courses apc WHERE apc.id IN (SELECT MIN(id) FROM career_tracks.all_persons_courses WHERE person_id = " + curUserID + " AND state_id = '4' GROUP BY course_id)");
+        
             if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_id == 6 || activeTrack.track_id == 7) {
 
-                course_person_level1 = checkLevel(1, curUserID);
-                course_person_level2 = checkLevel(2, curUserID);
+                course_person_level1 = checkLevel(1);
+                course_person_level2 = checkLevel(2);
 
                 level1_CompetencesNames = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE track_id = '" + activeTrack.track_id + "' AND level_id = '" + 1 + "'");
 
                 for(one_competence in level1_CompetencesNames) {
-                    new_percent = countCompetencePercent(1, one_competence.competence_id, all_persons_courses, activeTrack.track_id);
+                    new_percent = countCompetencePercent(1, one_competence.competence_id, activeTrack.track_id);
                     course_person_competence = update_or_create_competence(activeTrack.id, one_competence.competence_id, 1, new_percent);
                 }
 
                 level2_CompetencesNames = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE track_id = '" + activeTrack.track_id + "' AND level_id = '" + 2 + "'");
 
                 for(one_competence in level2_CompetencesNames) {
-                    new_percent = countCompetencePercent(2, one_competence.competence_id, all_persons_courses, activeTrack.track_id);
+                    new_percent = countCompetencePercent(2, one_competence.competence_id, activeTrack.track_id);
                     course_person_competence = update_or_create_competence(activeTrack.id, one_competence.competence_id, 2, new_percent);
                 }
 
@@ -153,7 +153,7 @@
                 competencesNames = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE track_id = '" + activeTrack.track_id + "'");
 
                 for(one_competence in competencesNames) {
-                    new_percent = countCompetencePercent(0, one_competence.competence_id, all_persons_courses, activeTrack.track_id);
+                    new_percent = countCompetencePercent(0, one_competence.competence_id, activeTrack.track_id);
                     course_person_competence = update_or_create_competence(activeTrack.id, one_competence.competence_id, 0, new_percent);
                 }
 
