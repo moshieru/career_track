@@ -8,7 +8,6 @@
     tracks = XQuery("sql: SELECT * FROM career_tracks.tracks");
 
     competenceCourses = XQuery("sql: SELECT DISTINCT c.name, t.course_id, t.level_id FROM dbo.competences AS c JOIN career_tracks.courses_from_tracks AS t ON c.id = t.competence_id WHERE c.code = 'kt' AND t.track_id = '" + activeTrack.track_id + "'");
-    uniqueCompetencesNames = XQuery("sql: SELECT DISTINCT c.name, MIN(c.id) AS competence_id FROM dbo.competences AS c JOIN career_tracks.courses_from_tracks AS t ON c.id = t.competence_id WHERE c.code = 'kt' AND t.track_id = '" + activeTrack.track_id + "' GROUP BY c.name");
     competencePictures = XQuery("sql: SELECT * FROM career_tracks.competence_pictures")
 
     thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + activeTrack.track_id + "'");
@@ -169,12 +168,20 @@
     // если старт, то берем компетенции и курсы из разных уровней
     // иначе берем все остальные компетенции из трека
 
+    // if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_id == 6 || activeTrack.track_id == 7){
+    //     firstLevelCompetences = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE level_id = '1'");
+    //     secondLevelCompetences = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE level_id = '2'");
+    //     thirdLevelCompetences = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE level_id = '3'");
+    // }else{
+    //     levelCompetences = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE track_id = '"+ activeTrack.track_id +"'");
+    // }
+
     if(activeTrack.track_id == 1 || activeTrack.track_id == 5 || activeTrack.track_id == 6 || activeTrack.track_id == 7){
-        firstLevelCompetences = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE level_id = '1'");
-        secondLevelCompetences = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE level_id = '2'");
-        thirdLevelCompetences = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE level_id = '3'");
+        firstLevelCompetences = XQuery("sql: SELECT competence_id FROM career_tracks.courses_from_tracks WHERE level_id = '1' GROUP BY competence_id ORDER BY CASE WHEN competence_id = 7542773123158964023 THEN 1 WHEN competence_id = 7541316986845059291 THEN 2 WHEN competence_id = 7542773230423764856 THEN 3 WHEN competence_id = 7542773261416730838 THEN 4 WHEN competence_id = 7542773358599415411 THEN 5 ELSE 6 END ASC;");
+        secondLevelCompetences = XQuery("sql: SELECT competence_id FROM career_tracks.courses_from_tracks WHERE level_id = '2' GROUP BY competence_id ORDER BY CASE WHEN competence_id = 7541316986845059291 THEN 1 WHEN competence_id = 7542841013567674475 THEN 2 WHEN competence_id = 7542773230423764856 THEN 3 WHEN competence_id = 7542773261416730838 THEN 4 WHEN competence_id = 7542773358599415411 THEN 5 ELSE 6 END ASC;");
+        thirdLevelCompetences = XQuery("sql: SELECT competence_id FROM career_tracks.courses_from_tracks WHERE level_id = '3' GROUP BY competence_id");
     }else{
-        levelCompetences = XQuery("sql: SELECT DISTINCT competence_id FROM career_tracks.courses_from_tracks WHERE track_id = '"+ activeTrack.track_id +"'");
+        levelCompetences = XQuery("sql: SELECT competence_id, id FROM career_tracks.courses_from_tracks WHERE track_id = '"+ activeTrack.track_id +"' GROUP BY competence_id");
     }
 
 
@@ -255,6 +262,7 @@
         }
 
         for(c in levelCompetencesForModule){
+
             competence_id = "'" + c.competence_id + "'";
             competence_result = 0;
             for(comp_res in user_competence_results){
