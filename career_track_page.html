@@ -26,7 +26,23 @@
 		}
 	}
 
-    if(ArrayCount(isActivated) == 0 || curUserID == 7486349730272889682){
+    function assign_achievement(achieve_id) {
+        qualification_assignment_array = XQuery("sql: select * from dbo.qualification_assignments where person_id = "+Int(curUserID)+" and qualification_id = "+achieve_id);
+
+        if(ArrayCount(qualification_assignment_array) == 0)
+        {
+            curr_user = ArrayOptFirstElem(XQuery("sql: select * from dbo.collaborators where id = "+ curUserID));
+            new_achieve = OpenNewDoc('x-local://wtv/wtv_qualification_assignment.xmd');
+            new_achieve.BindToDb();
+            new_achieve.TopElem.person_id = Int(curUserID);
+            new_achieve.TopElem.person_fullname = curr_user.fullname;
+            new_achieve.TopElem.qualification_id = achieve_id;
+            new_achieve.TopElem.status = "assigned";
+            new_achieve.Save();
+        }
+    }
+
+    if(ArrayCount(isActivated) == 0 || curUserID == 7486349730272889682 || curUserID == 7368355080725051326){
 
         function checkLevel(level_id){
             // узнаем, есть ли начатый уровень у сотрудника - если есть: вернем id записи, иначе 0
@@ -69,12 +85,12 @@
             if(level_id != 0){
                 // все курсы компетенции
                 all_competence_courses = XQuery("sql: SELECT course_id FROM career_tracks.courses_from_tracks WHERE level_id = "+ level_id +" AND competence_id = "+ competence_id +" AND track_id = " + person_track_id + "");
-		        person_competence_courses = XQuery("sql: SELECT DISTINCT a.course_id, a.course_name FROM career_tracks.all_persons_courses AS a JOIN career_tracks.courses_from_tracks AS t ON a.course_id = t.course_id WHERE t.competence_id = " + competence_id + " AND t.track_id = " + person_track_id + "AND a.person_id = " + curUserID + " AND a.state_id = 4 AND t.level_id = " + level_id + "");
+		        person_competence_courses = XQuery("sql: SELECT DISTINCT a.course_id FROM career_tracks.all_persons_courses AS a JOIN career_tracks.courses_from_tracks AS t ON a.course_id = t.course_id WHERE t.competence_id = " + competence_id + " AND t.track_id = " + person_track_id + "AND a.person_id = " + curUserID + " AND a.state_id = 4 AND t.level_id = " + level_id + "");
             } else {
 
                 // все курсы компетенции
                 all_competence_courses = XQuery("sql: SELECT course_id FROM career_tracks.courses_from_tracks WHERE competence_id = "+ competence_id +" AND track_id = " + person_track_id + "");
-		        person_competence_courses = XQuery("sql: SELECT DISTINCT a.course_id, a.course_name FROM career_tracks.all_persons_courses AS a JOIN career_tracks.courses_from_tracks AS t ON a.course_id = t.course_id WHERE t.competence_id = " + competence_id + " AND t.track_id = " + person_track_id + "AND a.person_id = " + curUserID + " AND a.state_id = 4");
+		        person_competence_courses = XQuery("sql: SELECT DISTINCT a.course_id FROM career_tracks.all_persons_courses AS a JOIN career_tracks.courses_from_tracks AS t ON a.course_id = t.course_id WHERE t.competence_id = " + competence_id + " AND t.track_id = " + person_track_id + "AND a.person_id = " + curUserID + " AND a.state_id = 4");
             }
 
 	        courses_passed_quantity = (Real(ArrayCount(person_competence_courses)) / ArrayCount(all_competence_courses)) * 100;
@@ -181,7 +197,7 @@
         secondLevelCompetences = XQuery("sql: SELECT competence_id FROM career_tracks.courses_from_tracks WHERE level_id = '2' GROUP BY competence_id ORDER BY CASE WHEN competence_id = 7541316986845059291 THEN 1 WHEN competence_id = 7542841013567674475 THEN 2 WHEN competence_id = 7542773230423764856 THEN 3 WHEN competence_id = 7542773261416730838 THEN 4 WHEN competence_id = 7542773358599415411 THEN 5 ELSE 6 END ASC;");
         thirdLevelCompetences = XQuery("sql: SELECT competence_id FROM career_tracks.courses_from_tracks WHERE level_id = '3' GROUP BY competence_id");
     }else{
-        levelCompetences = XQuery("sql: SELECT competence_id, id FROM career_tracks.courses_from_tracks WHERE track_id = '"+ activeTrack.track_id +"' GROUP BY competence_id");
+        levelCompetences = XQuery("sql: SELECT competence_id FROM career_tracks.courses_from_tracks WHERE track_id = '"+ activeTrack.track_id +"' GROUP BY competence_id");
     }
 
 
@@ -1039,6 +1055,7 @@
 
     <%if (activeTrack.percent == 100 || curUserID == 7486349730272889682) {
         createCert();
+        assign_achievement(7575070341401961209);
     }%>
 
 </script>
