@@ -203,7 +203,76 @@ sideBarProgress = null;
 return sideBarProgress;
 }
 
+<<<<<<< Updated upstream
 function drawSidebar(){
+=======
+        sidebarCards = "";
+        
+        if (collabTracksCount == 0 || startTrack.percent < 100){
+            for(track in tracks){
+                if(track.id != 1 && track.id != 5 && track.id != 6 && track.id != 7){
+                    sidebarCards += '
+                    <div class="sidebar-card">
+                        <img src="http://education-test.etagi.com/download_file.html?file_id=' + track.image + '">
+                        <div class="sidebar-content">
+                            <div class="sidebar-header">
+                                <div class="sidebar-point">
+                                    <img src="https://i.ibb.co/SwRnfFPX/image.png">
+                                    <span>6+ месяцев</span>
+                                </div>
+                                <div class="sidebar-point">
+                                <img src="https://i.ibb.co/9HTD4qpB/image.png">'
+                                + courseCount(track.id) + '
+                                </div>
+                                <div class="infoAll">
+                                    <img id="info" src="https://i.ibb.co/53V2wBt/info.png">
+                                    <div class="infoBlock" style="">Пройдите "Старт в недвижимости", чтобы открыть трек</div>
+                                </div>
+                            </div>
+                            <h3 class="sidebar-title">«' + track.name + '»</h3>
+                            <p class="sidebar-text">' + descriptions[track.id-1] + '</p>
+                            <div class="secondary-button">
+                                <button class="sidebar-button">Начать</button>
+                            </div>
+                        </div>
+                    </div>'                    
+                }
+                else{
+                    continue;
+                }
+            }
+        }
+        else if(collabTracksCount > 0){
+            for(track in tracks){
+                if(track.id != active_track.track_id && track.id != 5 && track.id != 6 && track.id != 7){
+                    sidebarCards += '
+                    <a class="sidebar-card" id="sidebar-card">
+                        <img src="http://education-test.etagi.com/download_file.html?file_id=' + track.image + '">
+                        <div class="sidebar-content">
+                            <div class="sidebar-header">
+                                <div class="sidebar-point">
+                                    <img src="https://i.ibb.co/SwRnfFPX/image.png">'
+                                    + defineExperience() + '
+                                </div>
+                                <div class="sidebar-point">
+                                    <img src="https://i.ibb.co/9HTD4qpB/image.png">'
+                                    + courseCount(track.id) + '
+                                </div>
+                            </div>
+                            <div class="sidebar-titlebody">
+                                <h3 class="sidebar-title">«' + track.name + '»</h3>'
+                                + drawProgressBar(track.id) + '                       
+                                </div>
+                            <p class="sidebar-text">' + descriptions[track.id-1] + '</p>
+                            <div class="secondary-button">'
+                                + defineButtonText(track.id) + '
+                            </div>
+                        </div>
+                    </a>'
+                }
+            }
+        }
+>>>>>>> Stashed changes
 
 sidebarCards = "";
 
@@ -477,6 +546,18 @@ return check;
         height: 16px;
     }
 
+<<<<<<< Updated upstream
+=======
+    .infoAll {
+        margin-left: auto;
+    }
+    .infoBlock {
+        display: none;
+    }
+    #info {
+    }
+
+>>>>>>> Stashed changes
     .sidebar-titlebody {
         display: flex;
         flex-direction: row;
@@ -862,6 +943,19 @@ return check;
             });
         });
         <%}%>
+
+
+    document.querySelectorAll('#info').forEach((item) => {
+        item.addEventListener('mouseover', (e) => {
+            console.log(item.nextSibling);
+            item.nextElementSibling.style.display = 'block';
+        })
+
+        item.addEventListener('mouseout', (e) => {
+            console.log(item.nextSibling);
+            item.nextElementSibling.style.display = 'none';
+        })
+    })
 
     const openBtn = document.getElementById('open');
     const modalOverlay = document.getElementById('modal-overlay');
