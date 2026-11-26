@@ -38,6 +38,32 @@
     // берем все курсы текущего сотрудника
     allPersonsCourses = XQuery("sql: SELECT * FROM career_tracks.all_persons_courses WHERE person_id = "+ curUserID +" ORDER BY state_id DESC");
 
+    function drawHeatmapStatus(course_id) {
+        var status = "waiting";
+        var label = "Ожидает прохождение";
+
+        // Проверяем все попытки: успешная имеет приоритет над повторным назначением.
+        // ID передается строкой, чтобы сохранить все 19 цифр.
+        // Результат XQuery в WebTutor перебирается через for ... in, без доступа по индексу.
+        var learning;
+        for (learning in allPersonsCourses) {
+            if (String(learning.course_id) != course_id) {
+                continue;
+            }
+            if (learning.state_id == 4) {
+                status = "passed";
+                label = "Пройден";
+                break;
+            }
+            if (learning.state_id == 1 || learning.state_id == 2 || learning.state_id == 3 || learning.percent > 0) {
+                status = "progress";
+                label = "В процессе";
+            }
+        }
+
+        return '<span class="ct-heatmap-status ct-heatmap-status--' + status + '">' + label + '</span>';
+    }
+
     cert_id = Int(7564683094932454725); // сертификат
 
 	function createCert() {
@@ -633,6 +659,109 @@
         font-weight: bold;
     }
 
+    .ct-heatmap {
+        width: 80%;
+        margin: 30px auto;
+        color: var(--text_secondary_color);
+    }
+
+    .ct-heatmap-heading {
+        margin: 0 0 12px;
+        color: var(--text_secondary_color);
+        font-size: 2.4rem;
+        font-weight: 600;
+        line-height: 1.3;
+    }
+
+    .ct-heatmap-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+        gap: 16px;
+    }
+
+    .ct-heatmap-slot {
+        border-radius: 12px;
+    }
+
+    .ct-heatmap-card {
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+        height: 100%;
+        padding: 14px 12px;
+        border: 1px solid #dfe1eb;
+        border-top: 4px solid var(--page_main_color);
+        border-radius: 9px;
+        background-color: #fff;
+        color: var(--text_secondary_color);
+        text-decoration: none;
+        overflow-wrap: anywhere;
+        transition: border-color 0.2s;
+    }
+
+    .ct-heatmap-card[href]:hover,
+    .ct-heatmap-card[href]:focus-visible {
+        border-color: var(--page_main_color);
+        text-decoration: none;
+    }
+
+    .ct-heatmap-card h3 {
+        margin: 0 0 8px;
+        color: var(--text_secondary_color);
+        font-size: 1.7rem;
+        font-weight: 600;
+        line-height: 1.3;
+    }
+
+    .ct-heatmap-week {
+        margin: 0 0 10px;
+        color: var(--page_main_color);
+        font-size: 1.3rem;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    .ct-heatmap-course {
+        margin: 0 0 14px;
+        color: #6a6a6a;
+        font-size: 1.3rem;
+        line-height: 1.45;
+    }
+
+    .ct-heatmap-note {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 500;
+        line-height: 1.45;
+    }
+
+    .ct-heatmap-status {
+        display: inline-block;
+        align-self: flex-start;
+        flex-shrink: 0;
+        margin-top: auto;
+        padding: 5px 8px;
+        border-radius: 6px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    .ct-heatmap-status--waiting {
+        background-color: #f0f1f6;
+        color: #545b70;
+    }
+
+    .ct-heatmap-status--progress {
+        background-color: #fff0d6;
+        color: #805200;
+    }
+
+    .ct-heatmap-status--passed {
+        background-color: var(--track_progress_color);
+        color: #244a2d;
+    }
+
     .modules-container {
         display: flex;
         flex-direction: row;
@@ -1051,6 +1180,70 @@
             <%=drawProgress()%>
             <%=drawTabs()%>
 
+            <%if(activeTrack.track_id == 1){%>
+            <section class="ct-heatmap" aria-labelledby="ct-heatmap-heading">
+                <h2 class="ct-heatmap-heading" id="ct-heatmap-heading">Инструменты риелтора</h2>
+                <div class="ct-heatmap-grid">
+                    <div class="ct-heatmap-slot">
+                        <a class="ct-heatmap-card" href="/_wt/7422932738528934171" target="_blank" rel="noopener">
+                            <p class="ct-heatmap-week">Неделя 1</p>
+                            <h3>RHOOD</h3>
+                            <p class="ct-heatmap-course">«Работа в парсере RHood (профессиональный набор базы)»</p>
+                            <%=drawHeatmapStatus("7422932738528934171")%>
+                        </a>
+                    </div>
+                    <div class="ct-heatmap-slot">
+                        <a class="ct-heatmap-card" href="/_wt/7639298700161584982" target="_blank" rel="noopener">
+                            <p class="ct-heatmap-week">Неделя 2</p>
+                            <h3>AI Витрина</h3>
+                            <p class="ct-heatmap-course">«AI Витрина. Нейросеть для увеличения продаж»</p>
+                            <%=drawHeatmapStatus("7639298700161584982")%>
+                        </a>
+                    </div>
+                    <div class="ct-heatmap-slot">
+                        <a class="ct-heatmap-card" href="/_wt/7691285369894931807" target="_blank" rel="noopener">
+                            <p class="ct-heatmap-week">Неделя 3</p>
+                            <h3>Colver</h3>
+                            <p class="ct-heatmap-course">«Colver: анализ звонков в работе риелтора»</p>
+                            <%=drawHeatmapStatus("7691285369894931807")%>
+                        </a>
+                    </div>
+                    <div class="ct-heatmap-slot">
+                        <a class="ct-heatmap-card" href="/_wt/7683381272361050786" target="_blank" rel="noopener">
+                            <p class="ct-heatmap-week">Неделя 4</p>
+                            <h3>Реклама с умом</h3>
+                            <p class="ct-heatmap-course">«Реклама с умом: работаем с рекомендациями по объектам»</p>
+                            <%=drawHeatmapStatus("7683381272361050786")%>
+                        </a>
+                    </div>
+                    <div class="ct-heatmap-slot">
+                        <a class="ct-heatmap-card" href="/_wt/7681513864878209693" target="_blank" rel="noopener">
+                            <p class="ct-heatmap-week">Неделя 5</p>
+                            <h3>Биржа объектов</h3>
+                            <p class="ct-heatmap-course">«Биржа объектов: больше возможностей для сделки»</p>
+                            <%=drawHeatmapStatus("7681513864878209693")%>
+                        </a>
+                    </div>
+                    <div class="ct-heatmap-slot">
+                        <a class="ct-heatmap-card" href="/_wt/7700854897551434287" target="_blank" rel="noopener">
+                            <p class="ct-heatmap-week">Неделя 6</p>
+                            <h3>Аналитическая справка</h3>
+                            <p class="ct-heatmap-course">«Аналитическая справка — ключ к пониманию рынка»</p>
+                            <%=drawHeatmapStatus("7700854897551434287")%>
+                        </a>
+                    </div>
+                    <div class="ct-heatmap-slot">
+                        <a class="ct-heatmap-card" href="/_wt/7690490259699751528" target="_blank" rel="noopener">
+                            <p class="ct-heatmap-week">Недели 9-12</p>
+                            <h3>Субсидирование</h3>
+                            <p class="ct-heatmap-course">«Уровень скидки. Как устроено многофакторное субсидирование рекламы»</p>
+                            <%=drawHeatmapStatus("7690490259699751528")%>
+                        </a>
+                    </div>
+                </div>
+            </section>
+            <%}%>
+
             <%=allCode%>
         </div>
     </div>
@@ -1116,6 +1309,11 @@
             document.querySelectorAll('.modules').forEach(t => t.style.display = 'none');
             document.querySelector('.' + tab.getAttribute("data-section")).style.display = "flex";
             document.querySelector('.' + tab.getAttribute("data-module")).style.display = "flex";
+
+            const heatmap = document.querySelector('.ct-heatmap');
+            if (heatmap) {
+                heatmap.hidden = tab.getAttribute('data-section') === 'section3';
+            }
 
             if(tab.id == "tab-test" && tab.classList.contains('active')) {
                 document.querySelector('.modules-container').style.display = 'none';
