@@ -1180,7 +1180,14 @@
             <%=drawProgress()%>
             <%=drawTabs()%>
 
-            <%if(activeTrack.track_id == 1){%>
+            <%
+            var heatmapRegionId = String(curUser.region_id);
+            if(activeTrack.track_id == 1 && (
+                heatmapRegionId == "5667697629116916697" ||
+                heatmapRegionId == "5667697629116916676" ||
+                heatmapRegionId == "5667697629116916695" ||
+                curUserID == "7028046547861373510"
+            )){%>
             <section class="ct-heatmap" aria-labelledby="ct-heatmap-heading">
                 <h2 class="ct-heatmap-heading" id="ct-heatmap-heading">Инструменты риелтора</h2>
                 <div class="ct-heatmap-grid">
